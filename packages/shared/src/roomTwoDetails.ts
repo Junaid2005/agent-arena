@@ -19,6 +19,7 @@ export function visibleInCurrentEvent(box: Box) {
 export type FurnitureItem = {
   id: string; type: 'table' | 'chair' | 'sofa' | 'registration'; point: PlanPoint; yaw: number;
   width: number; depth: number; height: number;
+  color?: string; tufted?: boolean;
 };
 export const ROOM_TWO_FURNITURE: FurnitureItem[] = [];
 const scale = VENUE_CALIBRATION.metresPerPixel;
@@ -55,5 +56,5 @@ export const FURNITURE_SOLIDS: Box[] = ROOM_TWO_FURNITURE.map((item) => {
 export function photographedMasonry(id: string): 'brick' | 'block' | null {
   if (id.startsWith('boat-bar-')) return 'block';
   if (id.includes('-gate-') || id.includes('lintel')) return null;
-  return /^(west-north|west-gate|north-tip|north-diagonal|north-boat|boat-atrium|private-west-top|private-west-side)-/.test(id) ? 'brick' : null;
+  return /^(west-north|west-gate|north-tip|north-diagonal|north-boat|boat-atrium|private-west-top|private-west-side|canal-atrium|atrium-court-west|atrium-court-east)-/.test(id) ? 'brick' : null;
 }

@@ -3,15 +3,17 @@ import { circleBoxOverlap, resolveCircleBox } from './geometry.ts';
 import { registeredStageSolids } from './stage.ts';
 import { FURNITURE_SOLIDS, visibleInCurrentEvent } from './roomTwoDetails.ts';
 import { TIMBER_BAY_COLLIDERS } from './roomOne.ts';
+import { ROOM_FIVE_FURNITURE_SOLIDS, atriumPlan } from './roomFive.ts';
 import { PLAN, VENUE_CALIBRATION, VENUE_ROOMS, VENUE_SPAWNS, planToWorld, type PlanPoint } from './venue.ts';
 import type { Vec3 } from './types.ts';
 
 export const TOUR = { eyeHeight: 1.65, bodyHeight: 1.8, radius: 0.3, walkSpeed: 1.4, fastSpeed: 2.4 };
 export const TOUR_SOLIDS = [...ARENA.filter(visibleInCurrentEvent), ...registeredStageSolids(), ...TIMBER_BAY_COLLIDERS];
-const FURNISHED_TOUR_SOLIDS = [...TOUR_SOLIDS, ...FURNITURE_SOLIDS];
+export const TOUR_FURNITURE_SOLIDS = [...FURNITURE_SOLIDS, ...ROOM_FIVE_FURNITURE_SOLIDS];
+const FURNISHED_TOUR_SOLIDS = [...TOUR_SOLIDS, ...TOUR_FURNITURE_SOLIDS];
 export const TOUR_STOPS: { name: string; spawn?: number; point?: PlanPoint }[] = [
   { name: 'Entrance / circulation', spawn: 0 }, { name: '1 / High bay', spawn: 1 },
-  { name: 'Atrium', spawn: 2 }, { name: 'Canal Room', spawn: 4 },
+  { name: '5 / Atrium', spawn: 2 }, { name: 'Canal Room', spawn: 4 },
   { name: 'Bar', spawn: 5 }, { name: 'Club Room', spawn: 6 },
   { name: 'Workshop', spawn: 7 }, { name: 'Photography studio', spawn: 8 },
   { name: 'Recording studio', spawn: 9 }, { name: 'Yard', spawn: 10 },
@@ -19,6 +21,8 @@ export const TOUR_STOPS: { name: string; spawn?: number; point?: PlanPoint }[] =
   { name: 'Stage / room 2', point: [450, 325] },
   { name: 'DevDay backdrop / lounge', point: [620, 645] },
   { name: '1 / Timber bay overview', point: [510, 425] },
+  { name: '5 / Atrium — opening end', point: atriumPlan(0.04, 0.5) },
+  { name: '5 / Atrium — white-wall end', point: atriumPlan(0.96, 0.5) },
 ];
 export function tourPosition(stop = 0): Vec3 {
   const target = TOUR_STOPS[stop];

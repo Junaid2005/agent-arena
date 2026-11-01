@@ -3,11 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { VenueModel } from '../game/Arena';
-import { TOUR, TOUR_STOPS, tourPosition, tourRoom, walkTour } from '../../../../packages/shared/src/tour';
+import { TOUR, TOUR_STOPS, TOUR_FURNITURE_SOLIDS, tourPosition, tourRoom, walkTour } from '../../../../packages/shared/src/tour';
 import { VENUE_CALIBRATION } from '../../../../packages/shared/src/venue';
-import { FURNITURE_SOLIDS } from '../../../../packages/shared/src/roomTwoDetails';
 import { circleBoxOverlap } from '../../../../packages/shared/src/geometry';
 import { ROOM_ONE } from '../../../../packages/shared/src/roomOne';
+import { ROOM_FIVE, atriumYaw } from '../../../../packages/shared/src/roomFive';
 import './tour.css';
 
 type Navigation = {
@@ -91,8 +91,8 @@ export default function VenueTour() {
   const begin = () => { nav.active = true; setStarted(true); (document.activeElement as HTMLElement)?.blur(); capture(); };
   const goTo = (index: number) => {
     resetInput(); nav.position = tourPosition(index);
-    nav.yaw = index === 1 ? -2.62 : index === 13 ? 3.015 : index === 12 ? 0.74 : index === 0 ? Math.PI / 2 : index === 2 ? -2.4 : 0;
-    nav.pitch = index === 1 ? 0.18 : index === 13 ? 0.14 : 0;
+    nav.yaw = index === 1 ? -2.62 : index === 13 ? 3.015 : index === 12 ? 0.74 : index === 15 ? atriumYaw(false) : index === 0 ? Math.PI / 2 : index === 2 || index === 14 ? atriumYaw() : 0;
+    nav.pitch = index === 1 ? 0.18 : index === 13 || index === 14 ? 0.14 : index === 2 || index === 15 ? 0.08 : 0;
     setStop(index); setRoom(TOUR_STOPS[index].name.toUpperCase());
   };
   const pad = (label: string, x: number, z: number) => <button aria-label={label}
@@ -130,6 +130,7 @@ export default function VenueTour() {
       <span>YOU ARE IN</span><h1>{room}</h1>
       <p>1 unit = 1 metre · Eye level {TOUR.eyeHeight.toFixed(2)} m</p>
       {room.includes('HIGH BAY') && <p>Upper roof {ROOM_ONE.upperRoofHeight.toFixed(1)} m · provisional photo estimate</p>}
+      {room.includes('ATRIUM') && <p>Eaves {ROOM_FIVE.eaveHeight.toFixed(1)} m / ridge {ROOM_FIVE.ridgeHeight.toFixed(1)} m · estimates</p>}
     </section>
     {started && <>
       <div className="tour-reticle" aria-hidden="true" />
@@ -144,7 +145,7 @@ export default function VenueTour() {
             if (!e.target.checked) { nav.solidFurniture = false; setSolidFurniture(false); }
           }} /> Show furniture</label>
           <label><input type="checkbox" checked={solidFurniture} disabled={!furniture} onChange={(e) => {
-            if (e.target.checked && FURNITURE_SOLIDS.some((b) => circleBoxOverlap(nav.position, TOUR.radius, b))) {
+            if (e.target.checked && TOUR_FURNITURE_SOLIDS.some((b) => circleBoxOverlap(nav.position, TOUR.radius, b))) {
               setFurnitureMessage('Step clear of furniture before enabling collisions.'); return;
             }
             nav.solidFurniture = e.target.checked; setSolidFurniture(e.target.checked); setFurnitureMessage('');
@@ -161,14 +162,14 @@ export default function VenueTour() {
       <b>HEIGHT REFERENCE / {VENUE_CALIBRATION.wallHeight.toFixed(1)} m</b>
       <span>Hall reference 5.5 m (drawing 5.6 m). Timber bay roof {ROOM_ONE.upperRoofHeight.toFixed(1)} m is provisional; heights await measurement.</span>
       <span>Floor plan: 1:200 at A3 · horizontal dimensions follow the illustrative venue drawing.</span>
-      <span>Photo-supported features · furniture arrangement, wall-face registration and dimensions remain estimates.</span>
+      <span>Atrium ridge {ROOM_FIVE.ridgeHeight.toFixed(1)} m is estimated · photo-supported features; furniture and member dimensions remain provisional.</span>
     </footer>
     {!started && <div className="tour-entry"><section>
       <span className="tour-kicker">55 LABURNUM STREET, LONDON</span>
       <h2>Walk the space.<br />At human scale.</h2>
       <p>Tour Hoxton Docks from a {TOUR.eyeHeight.toFixed(2)} m eye level, with life-size rooms and warehouse-height ceilings. Walk at {TOUR.walkSpeed} m/s through the traced doorways.</p>
       <button onClick={begin}>Enter the venue →</button>
-      <p className="tour-entry-note">{touch ? 'Touch arrows to walk. Drag to look.' : 'WASD or arrow keys to walk. Mouse to look. Esc releases the mouse.'} Room 2 includes photo-supported finishes and event furniture; exact placements remain under review.</p>
+      <p className="tour-entry-note">{touch ? 'Touch arrows to walk. Drag to look.' : 'WASD or arrow keys to walk. Mouse to look. Esc releases the mouse.'} Rooms 1, 2 and 5 include photo-informed geometry and finishes; unmeasured dimensions remain estimates.</p>
     </section></div>}
   </main>;
 }

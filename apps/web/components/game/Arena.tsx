@@ -9,6 +9,7 @@ import { concreteTexture, masonryTexture, metricBoxGeometry } from '../tour/room
 import { RegisteredEventStage } from '../tour/EventStage';
 import { RoomTwoFeatures, RoomTwoFurniture } from '../tour/RoomTwoDetails';
 import { RoomOneHighBay } from '../tour/RoomOneHighBay';
+import { RoomFiveAtrium } from '../tour/RoomFiveAtrium';
 import { photographedMasonry, visibleInCurrentEvent } from '../../../../packages/shared/src/roomTwoDetails';
 import type { Box } from '../../../../packages/shared/src/types';
 
@@ -48,17 +49,17 @@ function Floor({ outline, holes, color, y = 0, map }: { outline: PlanPoint[]; ho
 export function VenueModel({ labels = true, ceilings = false, eventSetup = false, furniture = true }: { labels?: boolean; ceilings?: boolean; eventSetup?: boolean; furniture?: boolean }) {
   const materials = useMemo(() => ({ floor: concreteTexture(true), column: concreteTexture(false), brick: masonryTexture(false), block: masonryTexture(true) }), []);
   useEffect(() => () => { Object.values(materials).forEach((texture) => texture.dispose()); }, [materials]);
-  const photographedHall = (id: string) => id === 'lightwell' || id === 'boat';
+  const photographedHall = (id: string) => id === 'lightwell' || id === 'boat' || id === 'atrium';
   return <group>
     <Floor outline={footprint} color="#d5d8d5" y={-0.008} />
     {VENUE_ROOMS.map((room) => <Floor key={room.id} outline={room.outline} holes={room.holes}
       color={photographedHall(room.id) ? '#ffffff' : room.color} map={photographedHall(room.id) ? materials.floor : undefined} />)}
     {/* The raised roof now has its own photo-estimated assembly rather than a flat hall cap. */}
-    {ceilings && VENUE_ROOMS.filter((room) => room.access !== 'outdoor' && room.id !== 'boat').map((room) =>
+    {ceilings && VENUE_ROOMS.filter((room) => room.access !== 'outdoor' && room.id !== 'boat' && (!eventSetup || room.id !== 'atrium')).map((room) =>
       <Floor key={`ceiling-${room.id}`} outline={room.outline} holes={room.holes}
         color={photographedHall(room.id) ? '#25292b' : '#eef0ed'} y={VENUE_CALIBRATION.wallHeight} />)}
     {ARENA.filter((box) => !eventSetup || visibleInCurrentEvent(box)).map((box) => <VenueBox key={box.id} box={box} materials={materials} />)}
-    {eventSetup && <><RoomOneHighBay roof={ceilings} /><RegisteredEventStage /><RoomTwoFeatures />{furniture && <RoomTwoFurniture />}</>}
+    {eventSetup && <><RoomOneHighBay roof={ceilings} /><RoomFiveAtrium roof={ceilings} furniture={furniture} /><RegisteredEventStage /><RoomTwoFeatures />{furniture && <RoomTwoFurniture />}</>}
     {labels && VENUE_ROOMS.filter((r) => r.id !== 'vestibule').map((room) => {
       const [x, z] = planToWorld(room.label);
       return <FloorLabel key={room.id} text={room.name} x={x} z={z} />;
@@ -74,7 +75,7 @@ function VenueBox({ box, materials }: { box: Box; materials: Record<string, THRE
   const gate = box.id.startsWith('west-gate-gate-');
   return <group position={box.position} rotation={[0, box.rotation ?? 0, 0]}>
     <mesh geometry={geometry} castShadow receiveShadow>
-      <meshStandardMaterial color={map ? '#ffffff' : gate ? '#414b4f' : box.color}
+      <meshStandardMaterial color={map ? '#ffffff' : box.id.startsWith('atrium-private-') ? '#e9e8df' : gate ? '#414b4f' : box.color}
         map={map} bumpMap={map} bumpScale={masonry ? 0.025 : 0.015} roughness={0.95} />
     </mesh>
     {gate && <>

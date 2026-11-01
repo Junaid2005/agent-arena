@@ -78,7 +78,7 @@ export const VENUE_ROOMS: VenueRoom[] = [
 
 export type PlanWall = { id: string; a: PlanPoint; b: PlanPoint; thickness?: number;
   /** Distances in trace pixels from a; gaps preserve door locations and widths. */
-  openings?: readonly (readonly [number, number])[]; gate?: boolean };
+  openings?: readonly (readonly [number, number])[]; gate?: boolean; openingHeight?: number; height?: number };
 export const PLAN_WALLS: PlanWall[] = [
   { id: 'west-north', a: [294, 48], b: [312, 380] },
   { id: 'west-gate', a: [312, 380], b: [324, 587], openings: [[110, 164]], gate: true },
@@ -99,14 +99,14 @@ export const PLAN_WALLS: PlanWall[] = [
   { id: 'private-west-studio', a: [544, 716], b: [469, 721] },
   { id: 'private-west-lower', a: [469, 721], b: [476, 889] },
   { id: 'private-west-partition', a: [332, 694], b: [540, 685] },
-  { id: 'boat-atrium', a: [644, 257], b: [650, 523], thickness: 0.55,
+  { id: 'boat-atrium', a: [644, 257], b: [650, 523], thickness: 0.55, openingHeight: 3.3,
     openings: [[30, 78], [217, 262]] },
   { id: 'boat-bar', a: [637, 570], b: [642, 670] },
-  { id: 'canal-atrium', a: [651, 365], b: [1057, 371], openings: [[219, 243]] },
+  { id: 'canal-atrium', height: 5.5, a: [651, 365], b: [1057, 371], openings: [[219, 243]] },
   { id: 'kitchen-canal', a: [906, 316], b: [906, 368], openings: [[14, 40]] },
-  { id: 'atrium-private', a: [1057, 344], b: [1052, 528], thickness: 0.4 },
-  { id: 'atrium-court-west', a: [652, 523], b: [895, 527], openings: [[5, 22], [98, 121]] },
-  { id: 'atrium-court-east', a: [948, 528], b: [1052, 528], openings: [[21, 45]] },
+  { id: 'atrium-private', height: 5.5, a: [1057, 344], b: [1052, 528], thickness: 0.4 },
+  { id: 'atrium-court-west', height: 5.5, a: [652, 523], b: [895, 527], openings: [[5, 22], [98, 121]] },
+  { id: 'atrium-court-east', height: 5.5, a: [948, 528], b: [1052, 528], openings: [[21, 45]] },
   { id: 'court-west-end', a: [652, 523], b: [648, 570], openings: [[12, 33]] },
   { id: 'court-west-access', a: [895, 527], b: [895, 573], openings: [[10, 33]] },
   { id: 'court-east-access', a: [948, 528], b: [948, 575], openings: [[10, 33]] },
@@ -154,7 +154,9 @@ export const VENUE_WALLS: Box[] = PLAN_WALLS.flatMap((wall) => {
     wall.a[1] + (wall.b[1] - wall.a[1]) * t / length];
   const boxes: Box[] = [];
   let start = 0;
-  const { wallHeight: h, doorHeight, wallThickness } = VENUE_CALIBRATION;
+  const { wallThickness } = VENUE_CALIBRATION;
+  const h = wall.height ?? VENUE_CALIBRATION.wallHeight;
+  const doorHeight = wall.openingHeight ?? VENUE_CALIBRATION.doorHeight;
   const thickness = wall.thickness ?? wallThickness;
   for (const [i, [from, to]] of (wall.openings ?? []).entries()) {
     boxes.push(segmentBox(`${wall.id}-${i}`, point(start), point(from), h, 0, thickness));

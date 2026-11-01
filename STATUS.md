@@ -72,3 +72,7 @@ Room 1 correction: tall paired timber doors, frame/rail/hardware, concrete heade
 - The VPS server is separate from Vercel’s frontend deployment pipeline.
 
 Pre-push integration: merged the latest feat/ghost-arena teammate updates, preserving pets, spatial audio and CI. Both player/pet rays use rotated venue geometry; the pet fixture now exercises a clear line in the new Atrium. All 23 combined tests, web/server type checks and the production build pass. Browser verified timber-bay views, the provisional-height label and room-5 navigation without page errors.
+
+Room 5 / Atrium photo pass: implemented the pitched roof, two skylight runs, trusses, crane rails/hoists, linear lighting, projector, brick/factory/frosted window faces, white projection end, banners and optional-collision furniture. Both end-view shortcuts follow the plan axis. Eaves/ridge 5.5/7.5 m and portal height 3.3 m remain estimates; see docs/room-05-atrium.md. Room shortcuts and a solid-furniture central aisle are tested.
+
+Room-5 validation: 25 combined tests, server/web typecheck and final production build pass. Standalone browser verified both end views and the solid-furniture control with no page errors. User accepted 5.5 m wall reference; ridge remains a provisional 7.5 m. Download: artifacts/hoxton-docks-simulator-room5.html.

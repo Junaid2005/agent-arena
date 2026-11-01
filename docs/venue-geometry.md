@@ -41,3 +41,7 @@ The tour adds ceiling surfaces over indoor room polygons at the explicit 5.5 m r
 ## Room-by-room photo pass
 
 The user identified the first photo batch as **room 2** and located the taller part on the **dashed square numbered 1**. The model now splits those survey regions accordingly, retaining an uninterrupted walking floor and adding no partition walls. Concrete finishes are shared across this photographed hall; the surrounding ceiling is dark, with its higher-bay footprint cut out. Room 1 now has a timber-door / raised masonry / clerestory assembly, with an explicitly provisional 8 m upper roof cap; its height/section remain unmeasured. See [room 1](room-01-timber-bay.md). See [room 2 survey](room-02-photo-survey.md) for observations and targeted missing references. Wall orientation, roof structure and event-object registration remain unresolved.
+
+## Atrium photo pass
+
+Room 5 now has a distinct pitched roof with two skylight strips, trusses, crane/hoist assemblies, factory/frosted windows, projector, lighting and furniture. The 5.5 m eaves / 7.5 m ridge, member sections and wide portal’s 3.3 m opening height are explicit photo estimates. The original horizontal footprint and door positions are retained. See [room 5](room-05-atrium.md).

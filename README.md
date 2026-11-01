@@ -1,6 +1,6 @@
 # HOXTON DOCKS / SPATIAL SIMULATOR
 
-The default route is a first-person walk-through of Hoxton Docks. Horizontal geometry uses the venue drawing’s published **1:200 at A3** calibration; one world unit represents one metre. Camera eye level is **1.65 m** and walking speed **1.4 m/s**. Room 2 now includes photo-supported finishes, furniture and the DevDay/OpenAI backdrop. Exact placement and unmeasured dimensions remain estimates.
+The default route is a first-person walk-through of Hoxton Docks. Horizontal geometry uses the venue drawing’s published **1:200 at A3** calibration; one world unit represents one metre. Camera eye level is **1.65 m** and walking speed **1.4 m/s**. Rooms 1/2 include the timber bay, photo-supported finishes, event furniture and DevDay/OpenAI backdrop. Room 5 adds the Atrium’s pitched roof, dual skylights, trusses, crane gear, factory windows and furniture. Exact placement and unmeasured dimensions remain estimates.
 
 The Boat Space has a **5.5 m ceiling** according to the brochure prose (the drawing says 5.6 m). The lower hall uses that 5.5 m reference. Room 1 now has tall timber doors and a separate raised masonry/glazing assembly, with an explicitly provisional 8 m upper roof. Other unsurveyed heights remain estimates. This is an illustrative-plan reconstruction, not a surveyed digital twin.
 
@@ -116,3 +116,5 @@ Do not commit `.env` files, API keys, generated deployment credentials or source
 ## Downloadable simulator
 
 Run `node scripts/export-tour.mjs` after `npm ci` to regenerate `artifacts/hoxton-docks-simulator.html`. This bundles the tour, review view and source-plan image into one HTML file. Furniture is visible by default; use **Show furniture** / **Solid furniture** to control visibility and obstruction while inspecting. The evidence and accuracy limits for the current photo pass are in [room 2 survey](docs/room-02-photo-survey.md).
+
+The Atrium eaves/ridge are provisional at 5.5 / 7.5 m. See [room 5 evidence and estimates](docs/room-05-atrium.md); photos establish the structural features but not measured heights or exact furniture counts.

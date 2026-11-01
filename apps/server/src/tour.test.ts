@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TOUR, TOUR_SOLIDS, TOUR_STOPS, tourPosition, tourRoom, walkTour } from '../../../packages/shared/src/tour.ts';
+import { TOUR, TOUR_SOLIDS, TOUR_STOPS, TOUR_FURNITURE_SOLIDS, tourPosition, tourRoom, walkTour } from '../../../packages/shared/src/tour.ts';
 import { TIMBER_FACE } from '../../../packages/shared/src/roomOne.ts';
 import { STAGE } from '../../../packages/shared/src/stage.ts';
 import { FURNITURE_SOLIDS, ROOM_TWO_FURNITURE } from '../../../packages/shared/src/roomTwoDetails.ts';
@@ -22,11 +22,11 @@ test('tour walks in real metres per second with fixed human eye level and tall w
 });
 
 test('tour destinations are clear of geometry and identify the expected room', () => {
-  const expected = ['foyer', 'boat', 'atrium', 'canal', 'bar', 'club', 'workshop', 'studio', 'recording', 'yard', 'lightwell', 'lightwell', 'lightwell', 'lightwell'];
+  const expected = ['foyer', 'boat', 'atrium', 'canal', 'bar', 'club', 'workshop', 'studio', 'recording', 'yard', 'lightwell', 'lightwell', 'lightwell', 'lightwell', 'atrium', 'atrium'];
   for (let i = 0; i < TOUR_STOPS.length; i++) {
     const p = tourPosition(i);
     assert.equal(tourRoom(p)?.id, expected[i]);
-    for (const box of [...TOUR_SOLIDS, ...FURNITURE_SOLIDS].filter((b) => b.position[1] - b.size[1] / 2 < TOUR.bodyHeight))
+    for (const box of [...TOUR_SOLIDS, ...TOUR_FURNITURE_SOLIDS].filter((b) => b.position[1] - b.size[1] / 2 < TOUR.bodyHeight))
       assert.ok(!circleBoxOverlap(p, TOUR.radius, box), `${TOUR_STOPS[i].name} overlaps ${box.id}`);
   }
 });

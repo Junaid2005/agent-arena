@@ -13,8 +13,8 @@ function Pole({ from, to, radius = 0.016 }: { from: number[]; to: number[]; radi
     <meshStandardMaterial color="#373a3b" metalness={0.55} roughness={0.6} />
   </mesh>;
 }
-const chairs = ROOM_TWO_FURNITURE.filter((item) => item.type === 'chair');
-function ChairInstances() {
+function ChairInstances({ items }: { items: FurnitureItem[] }) {
+  const chairs = useMemo(() => items.filter((item) => item.type === 'chair'), [items]);
   const seats = useRef<THREE.InstancedMesh>(null), frames = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => {
     const parts = [new THREE.BoxGeometry(0.44, 0.055, 0.42).translate(0, 0.45, 0),
@@ -43,7 +43,7 @@ function ChairInstances() {
       seats.current!.setMatrixAt(i, matrix); frames.current!.setMatrixAt(i, matrix);
     });
     seats.current!.instanceMatrix.needsUpdate = true; frames.current!.instanceMatrix.needsUpdate = true;
-  }, []);
+  }, [chairs]);
   return <group>
     <instancedMesh ref={seats} args={[geometry.seat, undefined, chairs.length]} frustumCulled={false}><meshStandardMaterial color="#2d302e" roughness={0.85} /></instancedMesh>
     <instancedMesh ref={frames} args={[geometry.frame, undefined, chairs.length]} frustumCulled={false}><meshStandardMaterial color="#373a3b" metalness={0.55} roughness={0.6} /></instancedMesh>
@@ -63,19 +63,23 @@ function Table({ item }: { item: FurnitureItem }) {
 }
 function Sofa({ item }: { item: FurnitureItem }) {
   return <group>
-    <mesh position={[0, 0.25, 0]}><boxGeometry args={[item.width, 0.35, item.depth]} /><meshStandardMaterial color="#88572e" roughness={0.7} /></mesh>
-    <mesh position={[0, 0.65, 0.37]}><boxGeometry args={[item.width, 0.42, 0.16]} /><meshStandardMaterial color="#915c30" roughness={0.65} /></mesh>
-    {[-1, 1].map((side) => <mesh key={side} position={[side * (item.width / 2 - 0.1), 0.55, 0]}><boxGeometry args={[0.2, 0.35, item.depth]} /><meshStandardMaterial color="#915c30" roughness={0.65} /></mesh>)}
+    <mesh position={[0, 0.25, 0]}><boxGeometry args={[item.width, 0.35, item.depth]} /><meshStandardMaterial color={item.color ?? '#88572e'} roughness={0.7} /></mesh>
+    <mesh position={[0, 0.65, 0.37]}><boxGeometry args={[item.width, 0.42, 0.16]} /><meshStandardMaterial color={item.color ?? '#915c30'} roughness={0.65} /></mesh>
+    {[-1, 1].map((side) => <mesh key={side} position={[side * (item.width / 2 - 0.1), 0.55, 0]}><boxGeometry args={[0.2, 0.35, item.depth]} /><meshStandardMaterial color={item.color ?? '#915c30'} roughness={0.65} /></mesh>)}
+    {item.tufted && [0.52, 0.64, 0.76].flatMap((y, row) => Array.from({ length: 10 }, (_, i) => <mesh key={`${row}-${i}`} position={[(i - 4.5) * 0.19, y, 0.28]}>
+      <sphereGeometry args={[0.019, 5, 4]} /><meshStandardMaterial color="#482722" />
+    </mesh>))}
   </group>;
 }
-export function RoomTwoFurniture() {
-  return <group><ChairInstances />{ROOM_TWO_FURNITURE.filter((item) => item.type !== 'chair').map((item) => {
+export function FurnitureCollection({ items }: { items: FurnitureItem[] }) {
+  return <group><ChairInstances items={items} />{items.filter((item) => item.type !== 'chair').map((item) => {
     const [x, z] = planToWorld(item.point);
     return <group key={item.id} position={[x, 0, z]} rotation={[0, item.yaw, 0]}>
       {item.type === 'sofa' ? <Sofa item={item} /> : <Table item={item} />}
     </group>;
   })}</group>;
 }
+export function RoomTwoFurniture() { return <FurnitureCollection items={ROOM_TWO_FURNITURE} />; }
 function Backdrop() {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas'); canvas.width = 1400; canvas.height = 800;
