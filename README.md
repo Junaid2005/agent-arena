@@ -79,9 +79,13 @@ Playable characters are camera-facing animated pet sprites using the built-in 8-
 
 ## Venue
 
-The layout is manually traced from `hackathon-map-rev03.webp`; materials and furniture reference `PXL_20261101_115923846.mp4`. The supplied plan has no survey scale, so dimensions and irregular boundaries are approximate. The model includes stage/demos, hacking desks, food, courtyard, judges, crew and welcome areas, with floor labels, exposed brick, steel trusses, high windows, skylights, audience seats, laptops and stage lighting.
+The arena now uses PR #13's Hoxton Docks floor plan: a human-scale, photo-informed reconstruction with the high bay, main hall and event stage, Canal Room, Atrium, entrance, courtyard, yard and parking. One unit is one metre at the drawing's published 1:200/A3 calibration. Exact placement, heights and unmeasured details remain estimates; this is not a surveyed digital twin.
 
-The 311 MB source video stays local and is excluded from Git, Vercel and Docker uploads. The floor plan is served at `/venue/floorplan.webp`. No automated photogrammetry reconstruction is claimed.
+The game stays at `/`, with playable pets, matching weapon/ammunition art and Vercel/Redis multiplayer. `/paintball` redirects to the game. `/venue` provides a top-down/orbit review with the source plan overlay; `/tour` preserves the standalone walk-through supplied by the map author. Neither review route changes the game's live-server requirement or restores practice mode.
+
+Architecture, event furniture, open entrance leaves, stage and locked-room panels share rotated collision boxes across Rapier, authoritative movement, camera clearance and hitscan. Diving uses substeps to prevent tunnelling through thin partitions. Rooms 4, 7, 8 and 10 remain locked; all twelve spawns are in public areas clear of furniture. The map and backend geometry must be deployed together, and existing Redis arena state must use a fresh map-version namespace to avoid resuming old positions.
+
+The source plan is served at `/venue/hoxton-ground-floor.webp`. See [geometry notes](docs/venue-geometry.md) and [map MVP notes](docs/venue-mvp.md) for calibration, photo-supported details and remaining limits. The original 311 MB video stays excluded from uploads; no automated photogrammetry is claimed.
 
 `NEXT_PUBLIC_VENUE_URL` optionally overlays a GLB; scale and Y rotation are configurable. Align manually defined authoritative colliders with imported geometry. Use a CORS-enabled asset host.
 

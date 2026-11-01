@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Player, Shot, Vec3 } from '../../../packages/shared/src/types.ts';
 import { newPlayer } from './players.ts';
+import { planToWorld } from '../../../packages/shared/src/venue.ts';
+const at = (x: number, z: number): Vec3 => { const [wx, wz] = planToWorld([x, z]); return { x: wx, y: 0, z: wz }; };
 import {
   CASTER_PROMPT,
   CommentaryDirector,
@@ -41,8 +43,8 @@ test('speakableName strips injection punctuation and caps length', () => {
   assert.equal(speakableName('🚀🚀'), 'Mystery Player');
   assert.equal(speakableName(''), 'Mystery Player');
   assert.ok(speakableName('A'.repeat(50)).length <= 18);
-  assert.equal(zoneOf({ x: -11, y: 0, z: -10 }), 'stage');
-  assert.equal(zoneOf({ x: 4, y: 0, z: 1.6 }), 'courtyard');
+  assert.equal(zoneOf(at(448, 350)), 'main hall');
+  assert.equal(zoneOf(at(773, 549)), 'courtyard');
 });
 
 test('a first kill is first blood with priority 3', () => {
@@ -213,10 +215,10 @@ test('situation names the leader, zones and an empty solo arena', () => {
   assert.match(situation([solo], base).text, /arena is empty/);
   const leader = player('0', 'Leader');
   leader.score = 4;
-  const other = player('1', 'Other', { x: -11, y: 0, z: -10 });
+  const other = player('1', 'Other', at(448, 350));
   const text = situation([leader, other], base).text;
   assert.match(text, /Leader leads with 4/);
-  assert.match(text, /stage/);
+  assert.match(text, /main hall/);
 });
 
 test('director stays busy until computed speech end even after onAudioDone', () => {

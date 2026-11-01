@@ -3,6 +3,8 @@ import { Suspense, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
 import * as THREE from 'three';
+import { rayOrientedBox } from '../../../../packages/shared/src/geometry';
+import { VENUE_SPAWNS } from '../../../../packages/shared/src/venue';
 import { ARENA } from '../../../../packages/shared/src/constants';
 import type { Player } from '../../../../packages/shared/src/types';
 import { controls, runtime, useGame } from '../../lib/store';
@@ -15,7 +17,7 @@ const showcase: Player = {
   id: 'showcase',
   name: 'Rookie',
   color: '#b9fa44',
-  position: { x: 0, y: 0, z: 8 },
+  position: { x: VENUE_SPAWNS[0][0], y: 0, z: VENUE_SPAWNS[0][2] },
   vy: 0,
   yaw: -0.4,
   pitch: 0,
@@ -49,7 +51,7 @@ export default function Scene() {
           </div>
         }
       >
-        <fog attach="fog" args={['#b6c2b2', 38, 90]} />
+        <fog attach="fog" args={['#b6c2b2', 65, 145]} />
         <ambientLight intensity={1.05} />
         <hemisphereLight args={['#f4f8dd', '#536559', 1.8]} />
         <directionalLight
@@ -98,30 +100,15 @@ function CameraRig() {
   const target = useRef(new THREE.Vector3());
   const initialized = useRef(false);
   const screen = useGame((s) => s.screen);
-  const boxes = ARENA.filter((b) => b.kind !== 'ramp').map(
-    (b) =>
-      new THREE.Box3(
-        new THREE.Vector3(
-          b.position[0] - b.size[0] / 2,
-          b.position[1] - b.size[1] / 2,
-          b.position[2] - b.size[2] / 2,
-        ),
-        new THREE.Vector3(
-          b.position[0] + b.size[0] / 2,
-          b.position[1] + b.size[1] / 2,
-          b.position[2] + b.size[2] / 2,
-        ),
-      ),
-  );
   useFrame(({ clock }, dt) => {
     if (screen === 'lobby') {
       initialized.current = false;
       const t = clock.elapsedTime * 0.025;
       camera.position.lerp(
-        new THREE.Vector3(22 + Math.sin(t) * 3, 18, 28 + Math.cos(t) * 2),
+        new THREE.Vector3(38 + Math.sin(t) * 3, 37, 46 + Math.cos(t) * 2),
         1 - Math.exp(-dt * 2),
       );
-      camera.lookAt(0, 0, 0);
+      camera.lookAt(0, 0, -2);
       return;
     }
     const p = runtime.local;
@@ -140,12 +127,11 @@ function CameraRig() {
       Math.sin(controls.pitch),
       -Math.cos(controls.yaw) * Math.cos(controls.pitch),
     );
-    const back = direction.clone().negate(),
-      ray = new THREE.Ray(target.current, back);
+    const back = direction.clone().negate();
     let distance = 4.5;
-    for (const box of boxes) {
-      const hit = ray.intersectBox(box, new THREE.Vector3());
-      if (hit) distance = Math.min(distance, Math.max(0.25, hit.distanceTo(target.current) - 0.18));
+    for (const box of ARENA) {
+      const hit = rayOrientedBox(target.current, back, box, distance);
+      if (hit !== null) distance = Math.min(distance, Math.max(0.25, hit - 0.18));
     }
     camera.position.copy(target.current).addScaledVector(back, distance);
     camera.position.y = Math.max(0.25, camera.position.y);
