@@ -2,18 +2,23 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Crosshair, LoaderCircle } from 'lucide-react';
 import { useGame, unlockAudio } from '../../lib/store';
+import { PETS, type PetId } from '../../../../packages/shared/src/pets';
 export function Lobby() {
   const [name, setName] = useState('');
+  const [pet, setPet] = useState<PetId>('codex');
   const status = useGame((s) => s.status),
     error = useGame((s) => s.error),
     join = useGame((s) => s.join);
   useEffect(() => {
     setName(localStorage.getItem('ghost:name') || '');
+    const savedPet = localStorage.getItem('ghost:pet');
+    if (savedPet && savedPet in PETS) setPet(savedPet as PetId);
   }, []);
   const enter = () => {
     unlockAudio();
     localStorage.setItem('ghost:name', name.trim());
-    join(name.trim());
+    localStorage.setItem('ghost:pet', pet);
+    join(name.trim(), pet);
   };
   return (
     <div className="lobby simple-lobby">
@@ -67,6 +72,24 @@ export function Lobby() {
             />
             <Crosshair size={20} />
           </div>
+          <fieldset className="pet-picker">
+            <legend>CHOOSE YOUR CODEX BUDDY</legend>
+            <div className="pet-grid">
+              {(Object.entries(PETS) as [PetId, (typeof PETS)[PetId]][]).map(([id, item]) => (
+                <button
+                  type="button"
+                  key={id}
+                  className={pet === id ? 'pet-choice selected' : 'pet-choice'}
+                  onClick={() => setPet(id)}
+                  aria-pressed={pet === id}
+                >
+                  <span className="pet-preview" style={{ backgroundImage: `url(${item.sprite})` }} />
+                  <strong>{item.name}</strong>
+                  <small>{item.role}</small>
+                </button>
+              ))}
+            </div>
+          </fieldset>
           {error && (
             <p role="alert" className="error-message">
               {error}
@@ -87,6 +110,7 @@ export function Lobby() {
           </button>
         </form>
       </section>
+      <div className="runner-poster" aria-hidden="true" />
       <div className="arena-caption">
         <span className="live-label">
           <i />

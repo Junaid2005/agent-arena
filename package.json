@@ -9,9 +9,10 @@
     "dev": "npm run dev -w @ghost/web",
     "build": "npm run build -w @ghost/web",
     "typecheck": "tsc --noEmit -p apps/server && tsc --noEmit -p apps/web",
-    "test": "tsx --test apps/server/src/*.test.ts",
+    "test": "tsx --test apps/server/src/*.test.ts apps/web/lib/*.test.ts",
     "test:network": "tsx scripts/network-test.ts",
     "dev:paintball": "concurrently -n WEB,SERVER -c cyan,magenta \"npm run dev -w @ghost/web\" \"npm run dev -w @ghost/server\""
+
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

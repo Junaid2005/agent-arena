@@ -59,3 +59,16 @@ Room-2 detail pass: added photo-supported masonry/concrete finishes, gate ribs/r
 Final detail-pass verification: production build/typecheck and 17 tests pass. Self-contained export was browser-checked for furniture visibility/solid controls, banner navigation, embedded plan overlay and mobile layout, with no page errors or external asset requests. Updated download: artifacts/hoxton-docks-simulator-detailed.html. Evidence limits and provisional placements remain documented; no production deployment.
 
 Room 1 correction: tall paired timber doors, frame/rail/hardware, concrete header, raised brickwork, upper loading panel, clerestory/mullions, hoist chain and provisional upper roof added over square 1. Added overview shortcut and closed-door collisions. Room 5 / Atrium is the next requested photo priority. See docs/room-01-timber-bay.md.
+
+## Auto-deployment setup
+
+- Merged Pets PR #1 is on default branch `feat/ghost-arena` at `910277d`.
+- Vercel project updated to Node 24 and Git deployment creation enabled.
+- GitHub app access is authorized and Vercel is connected to `Junaid2005/codex-paintabll`, confirmed through the project API.
+- Production branch: `feat/ghost-arena`. Default-branch pushes/merges publish production; other branches create previews.
+- GitHub CI runs successfully with all eight tests, type checking and the production build.
+- Added CI for web/server type checking, unit tests and production frontend builds.
+- Corrected the existing solo-combat test fixture to keep companion fire on cooldown; player-shot and respawn assertions remain intact.
+- The VPS server is separate from Vercel’s frontend deployment pipeline.
+
+Pre-push integration: merged the latest feat/ghost-arena teammate updates, preserving pets, spatial audio and CI. Both player/pet rays use rotated venue geometry; the pet fixture now exercises a clear line in the new Atrium. All 23 combined tests, web/server type checks and the production build pass. Browser verified timber-bay views, the provisional-height label and room-5 navigation without page errors.

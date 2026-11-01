@@ -277,6 +277,33 @@ h1 .hero-asterisk {
 .name-field svg {
   color: #89a083;
 }
+.pet-picker {
+  border: 0;
+  padding: 18px 0 0;
+  margin: 0;
+  min-width: 0;
+}
+.pet-picker legend { padding: 0; font-size: 8px; letter-spacing: 1.2px; color: #c8d7ba; }
+.pet-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 10px; }
+.pet-choice {
+  min-width: 0; min-height: 88px; padding: 7px 4px; display: grid; justify-items: center; gap: 2px;
+  color: #edf5df; background: #0f1d19b8; border: 1px solid #9caf8850; font: inherit; cursor: pointer;
+}
+.pet-choice:hover, .pet-choice.selected { border-color: #b9fa44; background: #b9fa441c; box-shadow: inset 0 -2px #b9fa44; }
+.pet-preview { width: 38px; height: 42px; display: block; background-size: 800% 1100%; background-position: 0 0; background-repeat: no-repeat; }
+.pet-choice strong { font-size: 8px; line-height: 1; }
+.pet-choice small { font-size: 5px; line-height: 1.15; color: #b7c8a5; text-align: center; }
+.runner-poster {
+  position: absolute;
+  right: 12%;
+  bottom: 7%;
+  width: min(37vw, 510px);
+  height: min(72vh, 760px);
+  pointer-events: none;
+  background: linear-gradient(0deg, #172421 2%, transparent 38%), url('/characters/ghost-runner.png') center bottom / contain no-repeat;
+  filter: drop-shadow(0 22px 28px #07100d99);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 9%, black 82%, transparent 100%);
+}
 .room-tabs {
   display: flex;
   margin: 18px 0 16px;
@@ -784,6 +811,7 @@ h1 .hero-asterisk {
   font-size: 11px;
   font-weight: bold;
 }
+.buddy-readout { display: block; margin-top: 3px; font-size: 6px; letter-spacing: 1px; color: #b9fa44; }
 .health-pips {
   display: flex;
   gap: 4px;
@@ -859,6 +887,7 @@ kbd {
   letter-spacing: 1px;
   color: #d9e3c8;
 }
+.marker-icon { width: 82px; height: 52px; object-fit: contain; filter: drop-shadow(0 0 8px #b9fa4466); }
 .player-tag {
   display: flex;
   gap: 7px;
@@ -1144,6 +1173,7 @@ kbd {
   }
 }
 @media (max-width: 760px) {
+  .runner-poster { display: none; }
   .lobby-shell {
     min-height: 790px;
     height: max(100dvh, 790px);

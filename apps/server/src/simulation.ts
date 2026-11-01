@@ -1,7 +1,7 @@
 import { DT, MATCH_MS } from '../../../packages/shared/src/constants.ts';
 import { movePlayer } from '../../../packages/shared/src/movement.ts';
 import type { Shot } from '../../../packages/shared/src/types.ts';
-import { shoot } from './combat.ts';
+import { petShoot, shoot } from './combat.ts';
 import { respawn } from './players.ts';
 import { idleInput, type Room } from './rooms.ts';
 export function simulate(room: Room, now: number): Shot[] {
@@ -41,6 +41,16 @@ export function simulate(room: Room, now: number): Shot[] {
           });
           room.feed = room.feed.slice(0, 5);
         }
+      }
+    }
+    const petShot = petShoot(p, players, now, m.lastPetShot);
+    if (petShot) {
+      m.lastPetShot = now;
+      shots.push(petShot);
+      if (petShot.killed) {
+        const victim = players.find((q) => q.id === petShot.hit)!;
+        room.feed.unshift({ id: petShot.id, killer: `${p.name} + ${p.pet}`, victim: victim.name, color: '#b9fa44', at: now });
+        room.feed = room.feed.slice(0, 5);
       }
     }
     m.input = { ...m.input, jump: false, dive: false, stumble: false };

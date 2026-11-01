@@ -1,5 +1,6 @@
 import type { Input, Shot, Snapshot } from './types.ts';
-export type JoinRequest = { name: string; room?: string; token?: string; avatarId?: string };
+import type { PetId } from './pets.ts';
+export type JoinRequest = { name: string; room?: string; token?: string; avatarId?: string; pet?: PetId };
 export type JoinReply =
   | { ok: true; id: string; token: string; snapshot: Snapshot }
   | { ok: false; error: string };

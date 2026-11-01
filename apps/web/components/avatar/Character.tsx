@@ -1,7 +1,7 @@
 'use client';
 import { Component, Suspense, useMemo, useRef, type ReactNode } from 'react';
 import { Html, RoundedBox, useAnimations, useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { CapsuleCollider, RigidBody, type RapierRigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -81,6 +81,7 @@ export function Character({
     flash = useRef<THREE.Mesh>(null),
     rigid = useRef<RapierRigidBody>(null);
   const pos = useRef(new THREE.Vector3(player.position.x, player.position.y, player.position.z));
+  const playerArt = useLoader(THREE.TextureLoader, '/characters/arena-player.png');
   const shots = useGame((s) => s.shots),
     latest = shots.filter((s) => s.shooter === player.id).at(-1);
   useFrame(({ clock }, dt) => {
@@ -227,9 +228,12 @@ export function Character({
               </Suspense>
             </ModelBoundary>
           ) : (
-            defaultRig
+            <mesh position={[0, 1.03, 0]} castShadow>
+              <planeGeometry args={[1.25, 2.04]} />
+              <meshStandardMaterial map={playerArt} transparent alphaTest={0.04} side={THREE.DoubleSide} roughness={0.72} />
+            </mesh>
           )}
-          <group ref={gun} position={[0, 1.18, -0.18]}>
+          {player.avatarUrl && <group ref={gun} position={[0, 1.18, -0.18]}>
             <Limb position={[-0.38, -0.04, -0.13]} rotation={[0.8, 0, -0.2]} color={player.color} />
             <Limb position={[0.38, -0.04, -0.13]} rotation={[0.8, 0, 0.2]} color={player.color} />
             <RoundedBox
@@ -252,7 +256,7 @@ export function Character({
               <sphereGeometry args={[0.11, 8, 8]} />
               <meshBasicMaterial color="#e2ff7b" />
             </mesh>
-          </group>
+          </group>}
           {player.hp < 3 && player.hp > 0 && (
             <mesh position={[-0.15, 1.15, -0.235]}>
               <circleGeometry args={[0.13, 9]} />

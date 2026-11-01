@@ -29,6 +29,7 @@ export type Player = {
   respawnAt: number;
   protectedUntil: number;
   avatarUrl?: string;
+  pet: import('./pets.ts').PetId;
 };
 export type Shot = {
   id: string;
@@ -38,6 +39,7 @@ export type Shot = {
   color: string;
   hit?: string;
   killed?: boolean;
+  pet?: import('./pets.ts').PetId;
   at: number;
 };
 export type Feed = { id: string; killer: string; victim: string; color: string; at: number };

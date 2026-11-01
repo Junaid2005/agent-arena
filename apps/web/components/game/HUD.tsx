@@ -15,6 +15,7 @@ import {
 import { useGame, runtime } from '../../lib/store';
 import { MobileControls } from './MobileControls';
 import { GhostMark } from '../lobby/Lobby';
+import { PETS } from '../../../../packages/shared/src/pets';
 export function HUD() {
   const s = useGame(),
     [now, setNow] = useState(Date.now()),
@@ -147,6 +148,7 @@ export function HUD() {
           </div>
           <div>
             <span className="callsign">{me?.name || 'ROOKIE'}</span>
+            <small className="buddy-readout">BUDDY · {me?.pet && me.pet in PETS ? PETS[me.pet].name.toUpperCase() : 'CODEX'}</small>
             <div className="health-pips">
               {[1, 2, 3].map((n) => (
                 <i key={n} className={(me?.hp || 0) >= n ? 'full' : ''} />
@@ -176,7 +178,7 @@ export function HUD() {
           </button>
         </div>
         <div className="ammo">
-          <Crosshair size={24} />
+          <img className="marker-icon" src="/characters/marker.png" alt="" />
           <strong>∞</strong>
           <span>
             PAINT

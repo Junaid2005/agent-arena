@@ -12,6 +12,7 @@ import { rooms, publicRoom, snapshot, idleInput, type Room, type Member } from '
 import { cleanName, validateInput } from './validation.ts';
 import { newPlayer } from './players.ts';
 import { simulate } from './simulation.ts';
+import { isPetId } from '../../../packages/shared/src/pets.ts';
 
 const origins = (process.env.CORS_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000')
   .split(',')
@@ -100,6 +101,7 @@ io.on('connection', (socket) => {
         input: idleInput(),
         lastInputAt: now,
         lastShot: 0,
+        lastPetShot: 0,
         lastReceivedSeq: -1,
         rateStart: now,
         rateCount: 0,
@@ -110,6 +112,7 @@ io.on('connection', (socket) => {
       member.input = idleInput();
       member.lastInputAt = now;
     }
+    if (isPetId(raw.pet)) member.player.pet = raw.pet;
     sessions.set(socket.id, { room, member });
     socket.join(room.code);
     reply({ ok: true, id: member.player.id, token: member.token, snapshot: snapshot(room, now) });

@@ -27,6 +27,10 @@ npm run build
 
 The previous paintball source and server remain in the repository for reference, but the default page now runs the standalone tour. `npm run dev:paintball` starts the original pair of development processes; the default frontend remains the simulator. The prior deployed game is at https://ghost-arena-theta.vercel.app and has not been updated by these local changes. The following architecture/deployment notes describe that retained implementation.
 
+## Codex buddies
+
+Before entering, choose a built-in ChatGPT Pet as your arena buddy. The selected pet follows its owner, fires a deliberately slow server-authoritative assist shot at nearby visible opponents, and credits any elimination to its owner. Pets vanish with their owner on elimination and return after respawn. The lobby uses the official Pet sprite sheets; the selected pet is carried in the join request so every player sees the same companion.
+
 ## Contributing
 
 Use Node 24 and npm. Clone this repository and install from the root:
@@ -58,7 +62,7 @@ Please use feature branches and pull requests. Useful contribution areas:
 
 Desktop: WASD to move, click the arena to lock the mouse, mouse to aim, hold left click to fire, Space to jump, Shift to dive, R to stumble, Tab for scores, Esc to release the cursor.
 
-Mobile: left joystick to move, drag the right half to aim, hold FIRE to shoot. Jump and dive have their own buttons. Landscape is recommended. The game menu includes fullscreen, sound, scores and leaving the arena.
+Mobile: left joystick to move, drag the right half to aim, hold FIRE to shoot. Jump and dive have their own buttons. Landscape is recommended. The game menu includes fullscreen, sound, scores and leaving the arena. Sound effects include marker pops, pet shots, paint splats, hit/elimination confirmation, damage, respawn, footsteps, jumps, landings, dives and stumbles. Nearby shots and impacts fade with distance and pan with your aim. Audio starts after interaction; Mute silences all effects, including sounds already playing. Effects are synthesized locally with Web Audio and require no downloads.
 
 ## Architecture
 
@@ -85,6 +89,14 @@ Provider research (1 November 2026): [Meshy image-to-3D](https://docs.meshy.ai/e
 Required: a server-only provider key with credits, S3/R2 credentials, public CORS-enabled asset storage, validated photo upload and confirmation, genuine progress polling, durable GLBs, generation-ID caching, rigging/animation integration, error/retry handling and default-avatar fallback. Do not persist expiring provider URLs as permanent avatar assets. Keep the game playable during generation.
 
 Full ragdoll simulation and spectator mode are also pending. The final two-human test on physical devices has not been performed by the agent; automated browser checks do not replace that test.
+
+## Automatic deployment and checks
+
+Vercel is connected to `Junaid2005/codex-paintabll` through its GitHub app, with automatic Git deployments enabled and Node 24 configured. The production branch is `feat/ghost-arena` (the repository’s default branch). Pushes and merged PRs to that branch publish to https://ghost-arena-theta.vercel.app; other branches receive previews. Manage the connection in [Vercel Git settings](https://vercel.com/junaid2005s-projects/ghost-arena/settings/git). No Vercel token is stored in GitHub.
+
+`.github/workflows/ci.yml` runs type checking, simulation/combat tests and a production build on pushes and pull requests. Vercel’s native build and this CI check run independently; branch protection can require the CI check before merging. Fork deployment authorization remains managed by Vercel.
+
+The persistent multiplayer server is deployed separately. A Vercel frontend deployment does not update server-side gameplay changes on the VPS.
 
 ## Deployment
 

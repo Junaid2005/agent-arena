@@ -4,7 +4,7 @@ import { movePlayer } from '../../../packages/shared/src/movement.ts';
 import { ARENA, DT, MATCH_MS, SPAWNS, RADIUS } from '../../../packages/shared/src/constants.ts';
 import { newPlayer } from './players.ts';
 import { idleInput, createRoom, rooms, type Member } from './rooms.ts';
-import { shoot, rayBox } from './combat.ts';
+import { petShoot, shoot, rayBox } from './combat.ts';
 import { simulate } from './simulation.ts';
 import { validateInput } from './validation.ts';
 import { planToWorld } from '../../../packages/shared/src/venue.ts';
@@ -20,6 +20,8 @@ function member(index = 0): Member {
     input: idleInput(),
     lastInputAt: time,
     lastShot: 0,
+    // Keep companion fire on cooldown in fixtures that isolate player shooting.
+    lastPetShot: time,
     lastReceivedSeq: -1,
     rateStart: time,
     rateCount: 0,
@@ -108,6 +110,22 @@ test('walls occlude hits and cooldown blocks excessive shooting', () => {
     rayBox({ x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: -1 }, { x: 2, y: 2, z: 2 }, { x: 3, y: 3, z: 3 }),
     null,
   );
+});
+test('a selected pet assists only at a capped server-authoritative cadence', () => {
+  const owner = newPlayer('owner', 'Owner', 0, time), enemy = newPlayer('enemy', 'Enemy', 1, time);
+  owner.position = at(830, 450);
+  enemy.position = at(830, 415);
+  owner.protectedUntil = 0;
+  enemy.protectedUntil = 0;
+  owner.pet = 'codex';
+  const first = petShoot(owner, [owner, enemy], time, 0);
+  assert.ok(first?.pet === 'codex');
+  assert.equal(petShoot(owner, [owner, enemy], time + 400, time), null);
+  const second = petShoot(owner, [owner, enemy], time + 1800, time);
+  const third = petShoot(owner, [owner, enemy], time + 3600, time + 1800);
+  assert.ok(second?.hit);
+  assert.ok(third?.killed);
+  assert.equal(owner.score, 1);
 });
 test('arena runs continuously without resetting scores; disconnect cleanup removes abandoned players', () => {
   const r = createRoom(time),

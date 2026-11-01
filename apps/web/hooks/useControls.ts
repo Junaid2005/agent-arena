@@ -12,6 +12,7 @@ export function useControls(active: boolean) {
     const down = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.matches('input,textarea')) return;
       if (['Space', 'Tab', 'ShiftLeft', 'ShiftRight'].includes(e.code)) e.preventDefault();
+      unlockAudio();
       keys.add(e.code);
       update();
       if (!e.repeat) {

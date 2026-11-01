@@ -20,6 +20,7 @@ export function newPlayer(id: string, name: string, index: number, now: number):
     diveUntil: 0,
     respawnAt: 0,
     protectedUntil: now + 2000,
+    pet: 'codex',
   };
 }
 export function respawn(p: Player, players: Player[], now: number) {

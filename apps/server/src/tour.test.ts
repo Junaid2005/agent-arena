@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TOUR, TOUR_SOLIDS, TOUR_STOPS, tourPosition, tourRoom, walkTour } from '../../../packages/shared/src/tour.ts';
+import { TIMBER_FACE } from '../../../packages/shared/src/roomOne.ts';
 import { STAGE } from '../../../packages/shared/src/stage.ts';
 import { FURNITURE_SOLIDS, ROOM_TWO_FURNITURE } from '../../../packages/shared/src/roomTwoDetails.ts';
 import { circleBoxOverlap } from '../../../packages/shared/src/geometry.ts';
@@ -62,4 +63,12 @@ test('furniture can be inspected without obstruction or made physically solid', 
   assert.ok(Math.abs(free.z - (z + 2 - 2.8)) < 1e-8, 'inspection movement passes through furniture');
   assert.ok(solid.z - free.z > 1.5, 'solid mode stops at the visible seating/table arrangement');
   assert.equal(free.y, 0, 'tables do not become walkable stages');
+});
+
+test('the closed timber leaves stop walking at their visible face', () => {
+  const front = { x: Math.sin(TIMBER_FACE.yaw), z: Math.cos(TIMBER_FACE.yaw) };
+  const p = { x: TIMBER_FACE.x + front.x * 1.5, y: 0, z: TIMBER_FACE.z + front.z * 1.5 };
+  for (let i = 0; i < 120; i++) walkTour(p, 0, -1, TIMBER_FACE.yaw, 1 / 60);
+  const depth = front.x * (p.x - TIMBER_FACE.x) + front.z * (p.z - TIMBER_FACE.z);
+  assert.ok(depth >= 0.18 + 0.06 + TOUR.radius - 0.002, 'cannot pass through the visible timber leaves');
 });

@@ -101,6 +101,7 @@ export function MobileControls() {
         className="touch-action jump"
         aria-label="Jump"
         onPointerDown={() => {
+          unlockAudio();
           controls.jump = true;
         }}
       >
@@ -111,6 +112,7 @@ export function MobileControls() {
         className="touch-action dive"
         aria-label="Dive"
         onPointerDown={() => {
+          unlockAudio();
           controls.dive = true;
         }}
       >
@@ -121,6 +123,7 @@ export function MobileControls() {
         className="touch-action stumble"
         aria-label="Stumble"
         onPointerDown={() => {
+          unlockAudio();
           controls.stumble = true;
         }}
       >
