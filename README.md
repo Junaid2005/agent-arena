@@ -1,4 +1,4 @@
-# GHOST ARENA
+# AGENT ARENA
 
 Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchange hackathon venue.
 

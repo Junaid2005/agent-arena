@@ -208,7 +208,7 @@ function openingEvent(players: Player[], now: number): CommentaryEvent {
     kind: 'opening',
     priority: 3,
     at: now,
-    text: `We are live at GHOST ARENA with ${list}.`,
+    text: `We are live at AGENT ARENA with ${list}.`,
   };
 }
 

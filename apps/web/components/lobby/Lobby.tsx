@@ -24,12 +24,12 @@ export function Lobby() {
   return (
     <div className="lobby simple-lobby">
       <header className="lobby-header">
-        <a className="brand" href="/" aria-label="Ghost Arena home">
+        <a className="brand" href="/" aria-label="Agent Arena home">
           <span className="ghost-mark">
             <GhostMark />
           </span>
           <span>
-            GHOST<span className="brand-light">ARENA</span>
+            AGENT<span className="brand-light">ARENA</span>
           </span>
         </a>
         <span className="build-tag">

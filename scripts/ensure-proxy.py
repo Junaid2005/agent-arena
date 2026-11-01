@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Restore only the GHOST ARENA route after Caddy reloads. Never replace other sites."""
+"""Restore only the AGENT ARENA route after Caddy reloads. Never replace other sites."""
 import json, urllib.request
 HOST = 'ghost-arena.162.19.137.169.sslip.io'
 URL = 'http://127.0.0.1:2019/config/apps/http/servers/srv0/routes'
@@ -11,4 +11,4 @@ route={'@id':'ghost-arena','match':[{'host':[HOST]}], 'handle':[{'handler':'reve
 request=urllib.request.Request(URL,data=json.dumps(route).encode(),headers={'Content-Type':'application/json'},method='POST')
 with urllib.request.urlopen(request,timeout=15) as response:
     assert response.status==200
-print('GHOST ARENA HTTPS route installed')
+print('AGENT ARENA HTTPS route installed')

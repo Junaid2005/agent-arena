@@ -30,7 +30,7 @@ const http = createServer((req, res) => {
     res.end(
       JSON.stringify({
         ok: true,
-        service: 'ghost-arena',
+        service: 'agent-arena',
         rooms: rooms.size,
         players: [...rooms.values()].reduce(
           (n, r) => n + [...r.members.values()].filter((m) => m.socketId).length,
@@ -185,7 +185,7 @@ const tick = setInterval(() => {
 }, 1000 / TICK_RATE);
 const port = Number(process.env.PORT || 3001);
 http.listen(port, '0.0.0.0', () =>
-  console.log(`GHOST ARENA authoritative server listening on :${port}`),
+  console.log(`AGENT ARENA authoritative server listening on :${port}`),
 );
 function shutdown() {
   clearInterval(tick);

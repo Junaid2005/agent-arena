@@ -112,7 +112,7 @@ export function Arena() {
       </group>
       <group position={[18.72, 2.5, -4]} rotation={[0, -Math.PI / 2, 0]}>
         <Sign
-          text="GHOST ARENA"
+          text="AGENT ARENA"
           sub="NO HARD FEELINGS. JUST PAINT."
           color="#cbf79b"
           background="#283e34"

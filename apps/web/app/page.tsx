@@ -8,7 +8,7 @@ const Scene = dynamic(() => import('../components/game/Scene'), {
   ssr: false,
   loading: () => (
     <div className="scene-loading">
-      <span className="ghost-icon">G</span>
+      <span className="ghost-icon">A</span>
       <p>PAINTING THE ARENA…</p>
     </div>
   ),

@@ -64,7 +64,7 @@ export function HUD() {
         <div className="hud-brand">
           <GhostMark />
           <span>
-            GHOST
+            AGENT
             <br />
             ARENA
           </span>
