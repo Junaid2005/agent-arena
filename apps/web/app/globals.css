@@ -594,6 +594,7 @@ h1 .hero-asterisk {
   margin-bottom: 20px;
 }
 .hud {
+  z-index: 5;
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -1729,4 +1730,51 @@ kbd {
   .simple-lobby .lobby-footer {
     width: 86%;
   }
+}
+
+/* Arcade arsenal: a changing weapon accent on the existing arena scorecard. */
+.weapon-card {
+  position: absolute; right: 24px; bottom: 28px; width: 252px; padding: 14px 16px 0;
+  color: #f3f1df; background: #11251fed; border: 1px solid #ffffff28;
+  border-top: 3px solid var(--weapon-color); box-shadow: 5px 5px 0 #07130e60;
+  pointer-events: none;
+}
+.weapon-kicker { display: flex; justify-content: space-between; font-size: 7px; letter-spacing: 1px; color: #a6bda4; }
+.weapon-kicker b { color: var(--weapon-color); }
+.weapon-title { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+.weapon-title > span { font-size: 38px; line-height: 1; color: var(--weapon-color); }
+.weapon-title small { display: block; font-size: 7px; letter-spacing: 1.6px; color: var(--weapon-color); }
+.weapon-title strong { display: block; font-family: GhostDisplay, sans-serif; font-size: 23px; line-height: 1.05; margin-top: 4px; }
+.weapon-card p { font-size: 8px; color: #c2d2bc; margin: 12px 0; }
+.weapon-stats { display: flex; gap: 14px; font-size: 8px; padding-bottom: 12px; }
+.weapon-stats span:first-child { color: var(--weapon-color); }
+.weapon-card footer { border-top: 1px solid #ffffff20; margin: 0 -16px; padding: 9px 16px; font-size: 7px; letter-spacing: 0.5px; }
+.weapon-card footer span { color: var(--weapon-color); margin: 0 5px; }
+.weapon-swap {
+  position: absolute; top: 22%; left: 50%; transform: translateX(-50%); padding: 16px 24px;
+  background: #11251ff0; color: #f3f1df; border-left: 4px solid var(--weapon-color); text-align: center;
+  box-shadow: 6px 6px 0 #07130e60; pointer-events: none; animation: weapon-arrive 0.25s ease-out;
+}
+.weapon-swap small { display: block; font-size: 8px; letter-spacing: 1.2px; color: var(--weapon-color); }
+.weapon-swap strong { display: block; margin: 8px 0; font-family: GhostDisplay, sans-serif; font-size: 30px; white-space: nowrap; }
+.weapon-swap > span { font-size: 9px; color: #c2d2bc; }
+@keyframes weapon-arrive { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+@media (pointer: coarse), (max-width: 720px) {
+  .weapon-card { bottom: auto; top: 84px; left: 14px; right: auto; width: 166px; padding: 8px 10px 0; }
+  .weapon-title { gap: 8px; margin: 7px 0; }
+  .weapon-title > span { font-size: 24px; }
+  .weapon-title strong { font-size: 16px; }
+  .weapon-kicker { font-size: 6px; letter-spacing: 0; }
+  .weapon-card p, .weapon-stats { display: none; }
+  .weapon-card footer { margin: 0 -10px; padding: 6px 10px; font-size: 6px; }
+  .weapon-swap { top: 34%; padding: 12px; max-width: 90vw; }
+  .weapon-swap strong { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) { .weapon-swap { animation: none; } }
+@media (min-width: 1001px) {
+  .desktop-controls { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
+}
+@media (max-width: 1000px) { .desktop-controls { display: none; } }
+@media (pointer: coarse), (max-width: 720px) {
+  .status-toast { top: 84px; left: auto; right: 14px; transform: none; width: calc(100% - 200px); }
 }

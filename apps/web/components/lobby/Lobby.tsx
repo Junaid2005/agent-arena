@@ -49,7 +49,7 @@ export function Lobby() {
         <p className="hero-copy">
           The paint never dries. The game never stops.
           <br />
-          Pick a pet. Enter the arena.
+          Pick a pet. Get a gun. Every kill shuffles it.
         </p>
         <form
           className="join-card"

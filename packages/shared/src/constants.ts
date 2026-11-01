@@ -5,7 +5,6 @@ export const MATCH_MS = 180_000;
 export const MAX_PLAYERS = 12;
 export const MAX_HP = 3;
 export const RESPAWN_MS = 3_000;
-export const FIRE_INTERVAL = 180;
 export const SPEED = 6;
 export const RADIUS = 0.36;
 export const HEIGHT = 1.7;

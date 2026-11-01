@@ -1,0 +1,17 @@
+export const WEAPONS = {
+  pistol: { name: 'Pocket Pistol', label: 'PISTOL', icon: '◈', color: '#ffe35e', interval: 280, damage: 1, range: 48, spread: 0, pellets: 1, hint: 'Steady aim. Three taps.', sound: 'shot' },
+  ar: { name: 'Paintstorm AR', label: 'AR', icon: '▰', color: '#ffad55', interval: 160, damage: 1, range: 48, spread: 0.016, pellets: 1, hint: 'Hold fire. Paint everything.', sound: 'ar' },
+  smg: { name: 'Pocket Shredder', label: 'SMG', icon: '≋', color: '#ff70ad', interval: 80, damage: 1, range: 24, spread: 0.055, pellets: 1, hint: 'Ridiculous speed. Get close.', sound: 'smg' },
+  sniper: { name: 'Big Peep Sniper', label: 'SNIPER', icon: '⌖', color: '#93c9ff', interval: 1300, damage: 3, range: 75, spread: 0, pellets: 1, hint: 'One shot. Make it count.', sound: 'sniper' },
+  rpg: { name: 'Party Crasher', label: 'RPG', icon: '◆', color: '#ff754c', interval: 1200, damage: 3, range: 48, spread: 0, pellets: 1, hint: 'Flying rocket. Four-metre splash.', sound: 'rocket' },
+  laser: { name: 'Disco Laser', label: 'LASER', icon: 'ϟ', color: '#65fff2', interval: 120, damage: 1, range: 65, spread: 0, pellets: 1, hint: 'Pinpoint pew pew. No spread.', sound: 'laser' },
+  fart: { name: 'Silent But Deadly', label: 'FART CANNON', icon: '☁', color: '#b9fa44', interval: 650, damage: 2, range: 6, spread: 0, pellets: 1, hint: 'Six-metre stink cone. Two blasts.', sound: 'fart' },
+  confetti: { name: 'Confetti Catastrophe', label: 'SHOTGUN', icon: '✳', color: '#df9dff', interval: 800, damage: 1, range: 18, spread: 0.14, pellets: 7, hint: 'Seven pellets. One very bad party.', sound: 'confetti' },
+} as const;
+export type WeaponId = keyof typeof WEAPONS;
+export const WEAPON_IDS = Object.keys(WEAPONS) as WeaponId[];
+export const isWeaponId = (value: unknown): value is WeaponId => typeof value === 'string' && Object.hasOwn(WEAPONS, value);
+export function rollWeapon(previous?: WeaponId, random = Math.random): WeaponId {
+  const choices = WEAPON_IDS.filter((id) => id !== previous);
+  return choices[Math.min(choices.length - 1, Math.max(0, Math.floor(random() * choices.length)))];
+}

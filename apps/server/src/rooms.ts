@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { Input, Player, Snapshot, Feed } from '../../../packages/shared/src/types.ts';
+import type { Input, Player, Snapshot, Feed, Shot } from '../../../packages/shared/src/types.ts';
 import { MATCH_MS } from '../../../packages/shared/src/constants.ts';
 export type Member = {
   player: Player;
@@ -21,6 +21,7 @@ export type Room = {
   feed: Feed[];
   finishedAt: number;
   createdAt: number;
+  projectiles: Shot[];
 };
 export const rooms = new Map<string, Room>();
 export const idleInput = (): Input => ({
@@ -47,6 +48,7 @@ export function createRoom(now: number) {
     feed: [],
     finishedAt: 0,
     createdAt: now,
+    projectiles: [],
   };
   rooms.set(code, room);
   return room;
@@ -74,6 +76,7 @@ export function publicRoom(now: number): Room {
     feed: [],
     finishedAt: 0,
     createdAt: now,
+    projectiles: [],
   };
   rooms.set('LIVE', room);
   return room;

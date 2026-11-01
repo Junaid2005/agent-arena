@@ -5,13 +5,30 @@ Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchan
 **Play:** https://ghost-arena-theta.vercel.app
 **Server health:** https://ghost-arena.162.19.137.169.sslip.io/health
 
-Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Three hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; restarting the server resets its in-memory state.
+Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Weapon damage determines how many hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; restarting the server resets its in-memory state.
 
 ## Play as a Codex pet
 
 Choose one of nine built-in Codex pets as your playable character before entering. Your choice is previewed in the lobby, remembered on this device, and sent to the server so every player sees the same character. Pets animate while idle, running, jumping, diving and stumbling, and keep their identity after elimination, respawn and reconnect. All characters share the same movement, health, hitbox and firing rules. There is no separate humanoid or companion, and shots require player input.
 
 Both frontend and server must be updated together. Older server versions ignore pet selection; the client reports a failed character load instead of silently substituting Codex.
+
+## Random gun game
+
+Everyone starts with a random weapon. Each server-confirmed elimination immediately rolls a different gun from the eight-weapon arsenal. Hits do not reroll; death, respawn and reconnect keep your current gun. Hold FIRE with any weapon; ammo is unlimited. The HUD shows the weapon, cadence, range and handling tip, and announces each kill swap.
+
+| Weapon | How it plays |
+| --- | --- |
+| Pocket Pistol | Accurate three-tap, 280 ms between shots |
+| Paintstorm AR | Automatic fire, slight spread, 160 ms cadence |
+| Pocket Shredder SMG | 80 ms cadence, wider spread, 24 m range |
+| Big Peep Sniper | Accurate one-shot, 1.3 second cooldown |
+| Party Crasher RPG | Rockets travel at 20 m/s; 4 m splash, lethal within 2 m |
+| Disco Laser | Accurate beams every 120 ms |
+| Silent But Deadly | Two-damage, 6 m forward stink cone every 650 ms |
+| Confetti Catastrophe | Seven pellets every 800 ms, each deals one damage |
+
+Rockets explode at their traced impact point after flight time, giving targets time to move. Splash and fart cones respect cover and spawn protection, can hit several opponents, and spare their shooter. Each victim earns one score and one roll. All live damage, random assignments and kill rolls are server-owned; the browser only sends controls. Practice uses the same ballistics with no opponents. The frontend and persistent server must both be deployed for this protocol update.
 
 ## Contributing
 

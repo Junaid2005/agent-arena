@@ -10,7 +10,7 @@ import { validateInput } from './validation.ts';
 const time = 10000;
 function member(index = 0): Member {
   return {
-    player: newPlayer(String(index), 'Player ' + index, index, time),
+    player: { ...newPlayer(String(index), 'Player ' + index, index, time), weapon: 'pistol' },
     token: 'token' + index,
     socketId: 'socket' + index,
     disconnectedAt: 0,
@@ -76,7 +76,7 @@ test('three server ray hits eliminate, award one score, then respawn after three
   a.player.protectedUntil = 0;
   b.player.protectedUntil = 0;
   a.input = { ...idleInput(), fire: true };
-  for (const t of [time, time + 200, time + 400]) {
+  for (const t of [time, time + 300, time + 600]) {
     a.lastInputAt = t;
     simulate(r, t);
   }
@@ -84,12 +84,12 @@ test('three server ray hits eliminate, award one score, then respawn after three
   assert.equal(a.player.score, 1);
   assert.equal(b.player.deaths, 1);
   assert.equal(r.feed.length, 1);
-  assert.equal(b.player.respawnAt, time + 3400);
-  simulate(r, time + 3399);
+  assert.equal(b.player.respawnAt, time + 3600);
+  simulate(r, time + 3599);
   assert.equal(b.player.hp, 0);
-  simulate(r, time + 3400);
+  simulate(r, time + 3600);
   assert.equal(b.player.hp, 3);
-  assert.ok(b.player.protectedUntil > time + 3400);
+  assert.ok(b.player.protectedUntil > time + 3600);
   rooms.delete(r.code);
 });
 test('walls occlude hits and cooldown blocks excessive shooting', () => {

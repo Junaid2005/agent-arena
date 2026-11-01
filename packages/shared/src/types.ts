@@ -28,6 +28,7 @@ export type Player = {
   diveUntil: number;
   respawnAt: number;
   protectedUntil: number;
+  weapon: import('./weapons.ts').WeaponId;
   pet: import('./pets.ts').PetId;
 };
 export type Shot = {
@@ -36,12 +37,19 @@ export type Shot = {
   from: Vec3;
   to: Vec3;
   color: string;
+  weapon: import('./weapons.ts').WeaponId;
+  trails?: Vec3[];
+  hits?: string[];
+  kills?: string[];
+  travelMs?: number;
+  impact?: boolean;
+  blastRadius?: number;
   hit?: string;
   killed?: boolean;
   pet?: import('./pets.ts').PetId;
   at: number;
 };
-export type Feed = { id: string; killer: string; victim: string; color: string; at: number };
+export type Feed = { id: string; killer: string; victim: string; color: string; weapon?: import('./weapons.ts').WeaponId; at: number };
 export type Snapshot = {
   room: string;
   players: Player[];

@@ -5,6 +5,8 @@ import { io, type Socket } from 'socket.io-client';
 import type { ClientEvents, ServerEvents, JoinReply } from '../../../packages/shared/src/protocol';
 import type { Input, Player, Shot, Snapshot } from '../../../packages/shared/src/types';
 import { movePlayer } from '../../../packages/shared/src/movement';
+import { shoot, explode } from '../../../packages/shared/src/combat';
+import { WEAPONS, isWeaponId, rollWeapon } from '../../../packages/shared/src/weapons';
 import { DT, MATCH_MS } from '../../../packages/shared/src/constants';
 import { isPetId, type PetId } from '../../../packages/shared/src/pets';
 
@@ -44,6 +46,7 @@ interface State {
   shots: Shot[];
   hitAt: number;
   hurtAt: number;
+  weaponChangedAt: number;
   muted: boolean;
   selectedPet: PetId;
   selectPet: (pet: PetId) => void;
@@ -62,6 +65,7 @@ export const useGame = create<State>((set, get) => ({
   shots: [],
   hitAt: 0,
   hurtAt: 0,
+  weaponChangedAt: 0,
   muted: false,
   selectedPet: 'codex',
   selectPet: (pet) => {
@@ -100,10 +104,10 @@ export const useGame = create<State>((set, get) => ({
           return;
         }
         const joined = result.snapshot.players.find((p) => p.id === result.id);
-        if (joined?.pet !== pet) {
+        if (joined?.pet !== pet || !isWeaponId(joined.weapon)) {
           set({
             screen: 'lobby', status: 'idle',
-            error: 'The arena could not load your selected character. Please try again shortly.',
+            error: 'The arena is updating its loadouts. Please try again shortly.',
           });
           socket?.disconnect();
           return;
@@ -123,6 +127,7 @@ export const useGame = create<State>((set, get) => ({
           room: result.snapshot.room,
           snapshot: result.snapshot,
           error: '',
+          weaponChangedAt: 0,
         });
         window.history.replaceState({}, '', '/');
       });
@@ -131,6 +136,10 @@ export const useGame = create<State>((set, get) => ({
       const me = snapshot.players.find((p) => p.id === get().id);
       if (me) {
         const previous = get().snapshot?.players.find((p) => p.id === me.id);
+        if (previous && previous.weapon !== me.weapon) {
+          set({ weaponChangedAt: performance.now() });
+          playSound('swap');
+        }
         if (previous && me.hp < previous.hp) {
           set({ hurtAt: performance.now() });
           playSound(me.hp === 0 ? 'out' : 'hurt');
@@ -146,21 +155,7 @@ export const useGame = create<State>((set, get) => ({
       }
       set({ snapshot });
     });
-    socket.on('shot', (shot) => {
-      set((s) => ({
-        shots: [...s.shots.filter((q) => shot.at - q.at < 4500), shot].slice(-100),
-        hitAt: shot.shooter === s.id && shot.hit ? performance.now() : s.hitAt,
-      }));
-      const me = runtime.local;
-      if (me) {
-        const local = shot.shooter === get().id;
-        const origin = local ? { volume: 1, pan: 0 } : spatialMix(shot.from, me.position, controls.yaw);
-        playSound(shot.pet ? 'pet' : 'shot', origin.volume, origin.pan);
-        const impact = spatialMix(shot.to, me.position, controls.yaw);
-        playSound('splat', impact.volume * 0.7, impact.pan);
-        if (local && shot.hit) playSound(shot.killed ? 'elimination' : 'hit');
-      }
-    });
+    socket.on('shot', receiveShot);
     socket.on('connect_error', () =>
       set({
         error: 'Cannot reach the arena server. Retry or explore in practice mode.',
@@ -195,6 +190,7 @@ export const useGame = create<State>((set, get) => ({
       respawnAt: 0,
       protectedUntil: 0,
       pet,
+      weapon: rollWeapon(),
     };
     runtime.local = p;
     runtime.pending = [];
@@ -207,6 +203,7 @@ export const useGame = create<State>((set, get) => ({
       id: p.id,
       room: 'PRACTICE',
       shots: [],
+      weaponChangedAt: 0,
       snapshot: {
         room: 'PRACTICE',
         players: [p],
@@ -234,8 +231,28 @@ export const useGame = create<State>((set, get) => ({
     window.history.replaceState({}, '', '/');
   },
 }));
+function receiveShot(shot: Shot) {
+  const s = useGame.getState();
+  useGame.setState({
+    shots: [...s.shots.filter((q) => shot.at - q.at < Math.max(950, (q.travelMs || 0) + 200)), shot].slice(-256),
+    hitAt: shot.shooter === s.id && shot.hit ? performance.now() : s.hitAt,
+  });
+  const me = runtime.local;
+  if (!me) return;
+  const local = shot.shooter === s.id;
+  if (!shot.impact) {
+    const origin = local ? { volume: 1, pan: 0 } : spatialMix(shot.from, me.position, controls.yaw);
+    playSound(WEAPONS[shot.weapon].sound, origin.volume, origin.pan);
+  }
+  if (!shot.travelMs) {
+    const impact = spatialMix(shot.to, me.position, controls.yaw);
+    playSound(shot.impact ? 'explosion' : 'splat', impact.volume * 0.7, impact.pan);
+  }
+  if (local && shot.hit) playSound(shot.killed ? 'elimination' : 'hit');
+}
 function startLoop() {
   let stride = 0;
+  let projectiles: Shot[] = [];
   if (timer) clearInterval(timer);
   timer = setInterval(() => {
     const s = useGame.getState(),
@@ -263,25 +280,18 @@ function startLoop() {
       socket?.emit('input', input);
     } else {
       const now = Date.now();
-      if (input.fire && now - runtime.lastShot > 180) {
-        runtime.lastShot = now;
-        const from = {
-          x: p.position.x + Math.cos(p.yaw) * 0.65,
-          y: p.position.y + 1.35,
-          z: p.position.z - Math.sin(p.yaw) * 0.65,
-        };
-        const d = {
-          x: -Math.sin(p.yaw) * Math.cos(p.pitch),
-          y: Math.sin(p.pitch),
-          z: -Math.cos(p.yaw) * Math.cos(p.pitch),
-        };
-        // Practice uses the same static ray occlusion, with no fabricated opponents.
-        const to = { x: from.x + d.x * 40, y: from.y + d.y * 40, z: from.z + d.z * 40 };
-        const shot: Shot = { id: String(now), shooter: p.id, from, to, color: p.color, at: now };
-        useGame.setState((st) => ({
-          shots: [...st.shots.filter((q) => now - q.at < 4500), shot].slice(-100),
-        }));
-        playSound('shot');
+      projectiles = projectiles.filter((flight) => {
+        if (now < flight.at + (flight.travelMs || 0)) return true;
+        receiveShot(explode(flight, p, [], now));
+        return false;
+      });
+      if (input.fire) {
+        const shot = shoot(p, [], now, runtime.lastShot);
+        if (shot) {
+          runtime.lastShot = now;
+          receiveShot(shot);
+          if (shot.travelMs) projectiles.push(shot);
+        }
       }
       useGame.setState({ snapshot: { ...s.snapshot!, players: [clone(p)], time: now } });
     }
