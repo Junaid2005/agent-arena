@@ -1,7 +1,7 @@
 # AGENT ARENA status
 
-Public frontend: https://ghost-arena-theta.vercel.app
-Game health: https://ghost-arena-theta.vercel.app/api/health
+Public frontend: https://agent-arena-paintball.vercel.app
+Game health: https://agent-arena-paintball.vercel.app/api/health
 
 ## Completed implementation
 
@@ -65,3 +65,10 @@ Merge the Vercel migration PR to preserve this setup on future Git deployments. 
 - Full production combat/load/long-duration testing deferred at the user's request. No two-human physical-device test claimed.
 - Retired the VPS game container, its proxy-restoration cron and its Caddy route; unrelated services were left running.
 - Integrated teammate pet-character and random-gun changes; updated distributed combat fixture passes. Vercel uses a new state namespace for the weapon protocol; existing sessions should reload after cutover.
+
+## Commentary and production address
+
+- Production domain: https://agent-arena-paintball.vercel.app, attached to the project for future auto-deployments. Shorter agent-arena and agent-arena-game names were unavailable.
+- Connected the existing Deepgram commentator to the Vercel simulation owner; audio/captions relay through Redis and native WebSockets, with browser PCM decoding. Ownership loss and instance closure stop the billed session.
+- Type checking, 47 unit tests and the two-instance/eight-client integration pass, including identical audio/captions on both instances and commentary cleanup on retirement.
+- Real Vercel/Deepgram smoke succeeded: joined, received caption text and 1,920 bytes of generated PCM audio through native WebSocket.

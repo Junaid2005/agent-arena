@@ -3,8 +3,12 @@ import { WebSocketServer } from 'ws';
 import { RedisGame, arenaHealth, redisUrl, statePrefix } from './redis-game.ts';
 import { attachWebSocket } from './websocket-peer.ts';
 
-export function localArena(url = redisUrl(), prefix = statePrefix()) {
-  const game = new RedisGame(url, prefix);
+export function localArena(
+  url = redisUrl(),
+  prefix = statePrefix(),
+  createCommentator?: ConstructorParameters<typeof RedisGame>[2],
+) {
+  const game = new RedisGame(url, prefix, createCommentator);
   const server = createServer((_req, res) => {
     void arenaHealth(url, prefix)
       .then((health) => {
