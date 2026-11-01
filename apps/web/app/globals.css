@@ -741,6 +741,47 @@ h1 .hero-asterisk {
     transform: translateX(0);
   }
 }
+.caster-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 118px;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 540px));
+  min-width: 280px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #172421ed;
+  border-left: 2px solid #b9fa44;
+  pointer-events: none;
+  z-index: 4;
+  animation: feed-in 0.22s ease-out;
+}
+.caster-caption p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: 0.4px;
+  overflow-wrap: anywhere;
+}
+.caster-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+  color: #b9fa44;
+  font-size: 7px;
+  letter-spacing: 1.6px;
+  white-space: nowrap;
+}
+.caster-tag i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b9fa44;
+  box-shadow: 0 0 8px #b9fa44;
+}
 .status-toast {
   position: absolute;
   top: 111px;
@@ -1380,6 +1421,16 @@ kbd {
     padding: 7px;
     gap: 8px;
   }
+  .caster-caption {
+    bottom: 208px;
+    width: calc(100vw - 30px);
+    max-width: 420px;
+    min-width: 0;
+    padding: 8px 10px;
+  }
+  .caster-caption p {
+    font-size: 8px;
+  }
   .game-menu {
     top: 65px;
     right: 15px;
@@ -1619,6 +1670,15 @@ kbd {
   }
   .kill-feed {
     top: 85px;
+  }
+  .caster-caption {
+    bottom: 95px;
+    width: min(420px, calc(100vw - 470px));
+    min-width: 0;
+    padding: 7px 10px;
+  }
+  .caster-caption p {
+    font-size: 8px;
   }
   .ammo {
     display: none;

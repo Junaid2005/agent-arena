@@ -12,4 +12,6 @@ export interface ServerEvents {
   snapshot: (snapshot: Snapshot) => void;
   shot: (shot: Shot) => void;
   notice: (text: string) => void;
+  commentaryAudio: (c: { turn: number; pcm: ArrayBuffer | Uint8Array }) => void;
+  commentaryText: (c: { turn: number; text: string }) => void;
 }

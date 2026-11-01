@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { playSound, setAudioMuted, spatialMix, unlockAudio } from './audio';
+import { getAudioContext, playSound, setAudioMuted, spatialMix, unlockAudio } from './audio';
 export { unlockAudio } from './audio';
 import { io, type Socket } from 'socket.io-client';
 import type { ClientEvents, ServerEvents, JoinReply } from '../../../packages/shared/src/protocol';
@@ -9,6 +9,7 @@ import { shoot, explode } from '../../../packages/shared/src/combat';
 import { WEAPONS, isWeaponId, rollWeapon } from '../../../packages/shared/src/weapons';
 import { DT, MATCH_MS } from '../../../packages/shared/src/constants';
 import { isPetId, type PetId } from '../../../packages/shared/src/pets';
+import { CommentaryPlayer } from './commentary';
 
 export const controls = {
   x: 0,
@@ -48,12 +49,15 @@ interface State {
   hurtAt: number;
   weaponChangedAt: number;
   muted: boolean;
+  casterOn: boolean;
+  caption: { text: string; at: number };
   selectedPet: PetId;
   selectPet: (pet: PetId) => void;
   join: (name: string, pet: PetId) => void;
   practice: (name: string, pet?: PetId) => void;
   leave: () => void;
   toggleMute: () => void;
+  toggleCaster: () => void;
 }
 export const useGame = create<State>((set, get) => ({
   screen: 'lobby',
@@ -67,6 +71,8 @@ export const useGame = create<State>((set, get) => ({
   hurtAt: 0,
   weaponChangedAt: 0,
   muted: false,
+  casterOn: storedCasterPreference(),
+  caption: { text: '', at: 0 },
   selectedPet: 'codex',
   selectPet: (pet) => {
     if (isPetId(pet)) set({ selectedPet: pet });
@@ -76,11 +82,21 @@ export const useGame = create<State>((set, get) => ({
     setAudioMuted(muted);
     if (!muted) unlockAudio();
     set({ muted });
+    applyCasterVolume();
+  },
+  toggleCaster: () => {
+    const casterOn = !get().casterOn;
+    set({ casterOn });
+    try {
+      localStorage.setItem('ghost:caster', casterOn ? '1' : '0');
+    } catch {}
+    applyCasterVolume();
   },
   join: (name, pet) => {
     socket?.disconnect();
     if (timer) clearInterval(timer);
-    set({ status: 'connecting', error: '', selectedPet: pet });
+    commentaryPlayer?.stopAll();
+    set({ status: 'connecting', error: '', selectedPet: pet, caption: { text: '', at: 0 } });
     const saved = sessionStorage.getItem('ghost:LIVE');
     identity = { name, pet, token: saved || undefined };
     socket = io(serverUrl, {
@@ -156,6 +172,14 @@ export const useGame = create<State>((set, get) => ({
       set({ snapshot });
     });
     socket.on('shot', receiveShot);
+    socket.on('commentaryAudio', ({ pcm }) => {
+      const ctx = getAudioContext();
+      if (!ctx || ctx.state !== 'running') return;
+      const player = commentaryFor(ctx);
+      player.setVolume(!get().muted && get().casterOn);
+      player.enqueue(pcm);
+    });
+    socket.on('commentaryText', ({ text }) => set({ caption: { text, at: Date.now() } }));
     socket.on('connect_error', () =>
       set({
         error: 'Cannot reach the arena server. Retry or explore in practice mode.',
@@ -170,6 +194,7 @@ export const useGame = create<State>((set, get) => ({
   practice: (name, pet = get().selectedPet) => {
     socket?.disconnect();
     if (timer) clearInterval(timer);
+    commentaryPlayer?.stopAll();
     const now = Date.now();
     const p: Player = {
       id: 'practice',
@@ -214,11 +239,20 @@ export const useGame = create<State>((set, get) => ({
         feed: [],
       },
       error: '',
+      caption: { text: '', at: 0 },
     });
     startLoop();
   },
   leave: () => {
-    set({ screen: 'lobby', status: 'idle', snapshot: null, shots: [], error: '' });
+    set({
+      screen: 'lobby',
+      status: 'idle',
+      snapshot: null,
+      shots: [],
+      error: '',
+      caption: { text: '', at: 0 },
+    });
+    commentaryPlayer?.stopAll();
     socket?.disconnect();
     socket = null;
     if (timer) clearInterval(timer);
@@ -299,4 +333,27 @@ function startLoop() {
     controls.dive = false;
     controls.stumble = false;
   }, DT * 1000);
+}
+let commentaryPlayer: CommentaryPlayer | null = null;
+let commentaryContext: AudioContext | null = null;
+function commentaryFor(ctx: AudioContext) {
+  if (!commentaryPlayer || commentaryContext !== ctx) {
+    commentaryPlayer = new CommentaryPlayer(ctx);
+    commentaryContext = ctx;
+  }
+  return commentaryPlayer;
+}
+function applyCasterVolume() {
+  if (!commentaryPlayer) return;
+  const s = useGame.getState();
+  commentaryPlayer.setVolume(!s.muted && s.casterOn);
+}
+function storedCasterPreference() {
+  try {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem('ghost:caster');
+    return saved === null ? true : saved === '1';
+  } catch {
+    return true;
+  }
 }
