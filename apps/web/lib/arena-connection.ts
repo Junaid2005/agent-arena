@@ -19,10 +19,11 @@ interface Handlers {
   commentaryText?: ServerEvents['commentaryText'];
 }
 export function connectArena(serverUrl: string, handlers: Handlers): ArenaConnection {
-  // Keep the existing standalone development server usable; production uses same-origin WSS.
+  // The persistent production/development server uses Socket.IO; native WSS remains available for Redis experiments.
   if (/^https?:/.test(serverUrl)) {
     const socket = io(serverUrl, {
-      transports: ['polling'],
+      transports: ['websocket', 'polling'],
+      tryAllTransports: true,
       timeout: 20_000,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1_000,
