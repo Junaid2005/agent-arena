@@ -1,11 +1,31 @@
-# GHOST ARENA
+# HOXTON DOCKS / SPATIAL SIMULATOR
 
-Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchange hackathon venue.
+The default route is a first-person walk-through of Hoxton Docks. Horizontal geometry uses the venue drawing’s published **1:200 at A3** calibration; one world unit represents one metre. Camera eye level is **1.65 m** and walking speed **1.4 m/s**. Room 2 now includes photo-supported finishes, furniture and the DevDay/OpenAI backdrop. Exact placement and unmeasured dimensions remain estimates.
 
-**Play:** https://ghost-arena-theta.vercel.app
-**Server health:** https://ghost-arena.162.19.137.169.sslip.io/health
+The Boat Space has a **5.5 m ceiling** according to the brochure prose (the drawing says 5.6 m). The lower hall uses that 5.5 m reference. Room 1 now has tall timber doors and a separate raised masonry/glazing assembly, with an explicitly provisional 8 m upper roof. Other unsurveyed heights remain estimates. This is an illustrative-plan reconstruction, not a surveyed digital twin.
 
-Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Three hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; restarting the server resets its in-memory state.
+## Run the simulator
+
+Use Node 24 and npm from the repository root:
+
+```sh
+npm ci
+npm run dev
+```
+
+The tour runs at `http://localhost:3000` without a game server, account, network session or database. Select **Enter the venue**. Walk with WASD/arrows; look with the mouse; Shift walks faster; Esc releases the mouse. Touch devices have walking arrows and drag-to-look. The room selector and **Return to entrance** provide navigation shortcuts. Movement is constrained by the traced walls and columns.
+
+Open `/venue` for top-down/3D plan review, the source overlay and metric grid. [Geometry notes](docs/venue-geometry.md) record the calibration and its limitations. Photos/materials, surveyed vertical dimensions, roof profiles, stair traversal and fixtures remain future work. No production deployment is included in this branch.
+
+```sh
+npm run typecheck
+npm test
+npm run build
+```
+
+## Retained paintball implementation
+
+The previous paintball source and server remain in the repository for reference, but the default page now runs the standalone tour. `npm run dev:paintball` starts the original pair of development processes; the default frontend remains the simulator. The prior deployed game is at https://ghost-arena-theta.vercel.app and has not been updated by these local changes. The following architecture/deployment notes describe that retained implementation.
 
 ## Contributing
 
@@ -48,9 +68,11 @@ The default humanoid has articulated joints and cosmetic wobble, stride, dive, s
 
 ## Venue
 
-The layout is manually traced from `hackathon-map-rev03.webp`; materials and furniture reference `PXL_20261101_115923846.mp4`. The supplied plan has no survey scale, so dimensions and irregular boundaries are approximate. The model includes stage/demos, hacking desks, food, courtyard, judges, crew and welcome areas, with floor labels, exposed brick, steel trusses, high windows, skylights, audience seats, laptops and stage lighting.
+The ground-floor blockout is traced from the venue's September 2025 credentials deck, page 5, using its published **1:200 at A3** scale. One game unit is one metre at that drawing scale. The model follows the irregular envelope, rooms, courtyards and door gaps; renderer, movement, camera collision and shooting share the same rotated walls. Temporary event furniture and speculative decoration have been removed while geometry is reviewed.
 
-The 311 MB source video stays local and is excluded from Git, Vercel and Docker uploads. The floor plan is served at `/venue/floorplan.webp`. No automated photogrammetry reconstruction is claimed.
+Open **`/venue`** (also linked from the lobby) for a top-down/3D review, 1 m grid and source-plan overlay. [Geometry notes](docs/venue-geometry.md) record the scale calculation, source, assumptions and unfinished details. The source is illustrative: this is not a surveyed digital twin. Ceiling heights, wall thicknesses and ambiguous openings need verification. The earlier event plan remains at `/venue/floorplan.webp`; the architectural reference is `/venue/hoxton-ground-floor.webp`.
+
+The 311 MB source video stays local and is excluded from Git, Vercel and Docker uploads. Photo/material reconstruction is deferred.
 
 `NEXT_PUBLIC_VENUE_URL` optionally overlays a GLB; scale and Y rotation are configurable. Align manually defined authoritative colliders with imported geometry. Use a CORS-enabled asset host.
 
@@ -78,3 +100,7 @@ vercel deploy --prod --yes \
 `scripts/ensure-proxy.py` adds only the GHOST ARENA hostname through Caddy’s local admin API. A user cron job restores this route within one minute of a Caddy reload or reboot; other hosted routes are retained. The demo relies on sslip.io DNS. An owned domain and a permanent Caddyfile entry are preferable after the hackathon. No paid hosting purchase was made.
 
 Do not commit `.env` files, API keys, generated deployment credentials or source video. The status file records completed checks and remaining gaps.
+
+## Downloadable simulator
+
+Run `node scripts/export-tour.mjs` after `npm ci` to regenerate `artifacts/hoxton-docks-simulator.html`. This bundles the tour, review view and source-plan image into one HTML file. Furniture is visible by default; use **Show furniture** / **Solid furniture** to control visibility and obstruction while inspecting. The evidence and accuracy limits for the current photo pass are in [room 2 survey](docs/room-02-photo-survey.md).

@@ -104,7 +104,7 @@ export function Lobby() {
           <span className="footer-dot" />
           NO HARD FEELINGS. JUST PAINT.
         </div>
-        <span>ALWAYS LIVE. ALWAYS A MESS.</span>
+        <a href="/venue">VIEW VENUE FLOOR PLAN ↗</a>
       </footer>
     </div>
   );

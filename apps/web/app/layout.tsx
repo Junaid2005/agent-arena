@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 export const metadata: Metadata = {
-  title: 'GHOST ARENA — Make a mess.',
+  title: 'Hoxton Docks — Walk-through simulator',
   description:
-    'A very unserious multiplayer paintball game. Your venue. Your friends. Absolutely no dignity.',
-  applicationName: 'GHOST ARENA',
+    'Explore the Hoxton Docks floor plan at human scale, with warehouse-height ceilings.',
+  applicationName: 'Hoxton Docks',
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'GHOST ARENA' },
 };
 export const viewport: Viewport = {

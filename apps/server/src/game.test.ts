@@ -1,12 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { movePlayer } from '../../../packages/shared/src/movement.ts';
-import { ARENA, DT, MATCH_MS, SPAWNS } from '../../../packages/shared/src/constants.ts';
+import { ARENA, DT, MATCH_MS, SPAWNS, RADIUS } from '../../../packages/shared/src/constants.ts';
 import { newPlayer } from './players.ts';
 import { idleInput, createRoom, rooms, type Member } from './rooms.ts';
 import { shoot, rayBox } from './combat.ts';
 import { simulate } from './simulation.ts';
 import { validateInput } from './validation.ts';
+import { planToWorld } from '../../../packages/shared/src/venue.ts';
+import { circleBoxOverlap } from '../../../packages/shared/src/geometry.ts';
+function at(x: number, z: number) { const p = planToWorld([x, z]); return { x: p[0], y: 0, z: p[1] }; }
 const time = 10000;
 function member(index = 0): Member {
   return {
@@ -36,9 +39,10 @@ test('rejects impossible, nonfinite, malformed and stale-shaped inputs', () => {
 });
 test('authoritative movement has fixed speed, floor, jump, boundaries and solid walls', () => {
   const p = newPlayer('a', 'Alice', 0, time);
-  p.position = { x: 12, y: 0, z: 13 };
-  for (let i = 0; i < 25; i++) movePlayer(p, { ...idleInput(), z: -1 }, DT, time + i * 40);
-  assert.ok(Math.abs(p.position.z - 7) < 0.001);
+  p.position = at(900, 450);
+  const start = p.position.x;
+  for (let i = 0; i < 25; i++) movePlayer(p, { ...idleInput(), x: -1 }, DT, time + i * 40);
+  assert.ok(Math.abs(p.position.x - (start - 6)) < 0.001);
   assert.equal(p.position.y, 0);
   movePlayer(p, { ...idleInput(), jump: true }, DT, time + 1000);
   assert.ok(p.position.y > 0);
@@ -46,20 +50,16 @@ test('authoritative movement has fixed speed, floor, jump, boundaries and solid 
   for (let i = 0; i < 100; i++) movePlayer(p, idleInput(), DT, time + 1100 + i * 40);
   assert.equal(p.position.y, 0);
   assert.equal(p.grounded, true);
-  p.position = { x: 14, y: 0, z: 12 };
-  for (let i = 0; i < 200; i++) movePlayer(p, { ...idleInput(), x: 1 }, DT, time + i * 40);
-  assert.ok(p.position.x <= 14.64 + 0.001, 'cannot penetrate the east off-limits wall');
+  p.position = at(680, 450);
+  for (let i = 0; i < 200; i++) movePlayer(p, { ...idleInput(), x: -1 }, DT, time + i * 40);
+  assert.ok(p.position.x > planToWorld([650, 450])[0], 'cannot penetrate the Boat Space / Atrium divider');
 });
 test('every spawn is outside solid geometry and supports the player', () => {
   SPAWNS.forEach(([x, y, z], index) => {
     for (const b of ARENA) {
       if (b.kind === 'ramp') continue;
-      const [bx, by, bz] = b.position,
-        [sx, sy, sz] = b.size;
-      const inside =
-        Math.abs(x - bx) < sx / 2 + 0.36 &&
-        Math.abs(z - bz) < sz / 2 + 0.36 &&
-        y < by + sy / 2 - 0.01;
+      const inside = circleBoxOverlap({ x, y, z }, RADIUS, b) &&
+        y < b.position[1] + b.size[1] / 2 - 0.01 && y + 1.7 > b.position[1] - b.size[1] / 2;
       assert.ok(!inside, `spawn ${index} inside ${b.id}`);
     }
   });
@@ -70,8 +70,8 @@ test('three server ray hits eliminate, award one score, then respawn after three
     b = member(1);
   r.members.set('0', a);
   r.members.set('1', b);
-  a.player.position = { x: 11, y: 0, z: 12 };
-  b.player.position = { x: 11.65, y: 0, z: 10 };
+  a.player.position = at(840, 706);
+  b.player.position = { ...at(840, 665), x: a.player.position.x + 0.65 };
   a.player.yaw = 0;
   a.player.protectedUntil = 0;
   b.player.protectedUntil = 0;
@@ -95,8 +95,8 @@ test('three server ray hits eliminate, award one score, then respawn after three
 test('walls occlude hits and cooldown blocks excessive shooting', () => {
   const a = newPlayer('a', 'Alice', 0, time),
     b = newPlayer('b', 'Bob', 1, time);
-  a.position = { x: -4, y: 0, z: -7 };
-  b.position = { x: 0, y: 0, z: -7 };
+  a.position = at(610, 430);
+  b.position = at(690, 430);
   a.yaw = -Math.PI / 2;
   b.protectedUntil = 0;
   const s = shoot(a, [a, b], time, 0);
@@ -125,21 +125,15 @@ test('arena runs continuously without resetting scores; disconnect cleanup remov
   assert.equal(r.members.size, 0);
   rooms.delete(r.code);
 });
-test('dive, stumble and ramps preserve controllability and recovery', () => {
+test('dive and stumble preserve controllability and recovery', () => {
   const p = newPlayer('p', 'Player', 0, time);
-  p.position = { x: 12, y: 0, z: 13 };
+  p.position = at(900, 450);
   movePlayer(p, { ...idleInput(), dive: true }, DT, time);
   assert.ok(p.diveUntil > time);
-  assert.ok(p.position.z < 13);
+  assert.ok(p.position.z < at(900, 450).z);
   movePlayer(p, { ...idleInput(), stumble: true }, DT, time + 2000);
   assert.ok(p.knockUntil > time + 2000);
   const before = p.position.z;
   movePlayer(p, { ...idleInput(), z: -1 }, DT, time + 3100);
   assert.ok(p.position.z < before);
-  const ramp = ARENA.find((b) => b.kind === 'ramp')!;
-  p.position = { x: ramp.position[0], y: 0, z: ramp.position[2] + ramp.size[2] / 2 + 0.1 };
-  p.vy = 0;
-  p.grounded = true;
-  for (let i = 0; i < 16; i++) movePlayer(p, { ...idleInput(), z: -1 }, DT, time + 5000 + i * 40);
-  assert.ok(p.position.y > 0.4, 'walk up the stage ramp');
 });

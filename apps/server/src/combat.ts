@@ -1,5 +1,6 @@
 import { ARENA, FIRE_INTERVAL, RESPAWN_MS } from '../../../packages/shared/src/constants.ts';
 import type { Player, Shot, Vec3 } from '../../../packages/shared/src/types.ts';
+import { rayOrientedBox } from '../../../packages/shared/src/geometry.ts';
 export function rayBox(o: Vec3, d: Vec3, min: Vec3, max: Vec3): number | null {
   let near = 0,
     far = 80;
@@ -33,14 +34,7 @@ export function shoot(p: Player, players: Player[], now: number, lastShot: numbe
     hit: Player | undefined;
   // World geometry always occludes players. Ramps use conservative bounding boxes.
   for (const b of ARENA) {
-    const [x, y, z] = b.position,
-      [sx, sy, sz] = b.size;
-    const t = rayBox(
-      from,
-      d,
-      { x: x - sx / 2, y: y - sy / 2, z: z - sz / 2 },
-      { x: x + sx / 2, y: y + sy / 2, z: z + sz / 2 },
-    );
+    const t = rayOrientedBox(from, d, b);
     if (t !== null && t < distance) distance = t;
   }
   if (d.y < 0) {

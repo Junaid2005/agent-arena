@@ -1,3 +1,7 @@
+# Current experience: Hoxton Docks simulator
+
+The default frontend is now a standalone first-person tour. Human eye level is 1.65 m; walking is 1.4 m/s, with collision-aware desktop/touch controls and room shortcuts. The 5.5 m Boat Space ceiling reference is visible; other room heights remain provisional. No game server is required for the tour. See README and docs/venue-geometry.md. These changes are local, not deployed.
+
 # GHOST ARENA status
 
 Public frontend: https://ghost-arena-theta.vercel.app
@@ -9,13 +13,13 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 - [x] M2: 25 Hz authoritative Node/Socket.IO server, one public arena (12 seats), prediction/reconciliation, remote interpolation, reconnection and cleanup
 - [x] M3: Validated hitscan, three-hit health, trails/impacts, muzzle flash, hit feedback, elimination feed, scores, three-second respawn and continuous play with no timer or score resets
 - [x] M5 partial: Articulated default humanoid, cosmetic wobble, strides, recoil, dive, stumble and collapse; synchronized knockdown state
-- [x] M6: Venue reconstructed manually from the supplied floor plan and video, primitive collisions, stage ramp, room labels, furniture, brick, windows and trusses; optional GLB overlay
+- [x] M6 blockout: Shared ground-floor trace at the architectural plan’s published 1:200 / A3 scale, neutral rooms/walls, rotated collisions and source-overlay review; photo/material layer deferred
 - [x] M7: Responsive lobby/HUD and PUBG-style touch movement, right-side aiming, dedicated fire/jump/dive buttons
 - [x] M8 deployment: Vercel production build, persistent VPS container, HTTPS/WSS proxy, CORS and health endpoint
 
 ## Verification
 
-- Seven unit tests pass: validation, collision/movement/jump, every spawn, combat/respawn, wall occlusion, match restart, dive/stumble/ramp recovery.
+- Twelve local tests pass: validation, movement/jump, every spawn, combat/respawn, wall occlusion, continuous arena, dive/stumble, published drawing scale, every doorway, diagonal walls, long-room traversal and lintel headroom.
 - Type checking passes for web and server.
 - Local eight-client network test passed movement through venue doors, elimination, scores, respawn, invalid input, reconnect and shared-arena joining.
 - Vercel production build passed with Next 16.4.3; install audit reported zero vulnerabilities.
@@ -27,7 +31,7 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 
 - Genuine photo-to-3D pipeline is not implemented/enabled. Meshy docs researched; provider key, prepaid credits and shared object storage credentials are missing. No fake progress/model is shown.
 - Real ragdoll simulation and spectator mode are not implemented.
-- Venue dimensions are approximate; no scale was supplied. Optional GLBs still need aligned manual collider geometry.
+- Venue horizontal geometry now follows the supplied architectural drawing at its published 1:200 / A3 scale. This is illustrative, not surveyed; heights/thicknesses and ambiguous openings remain assumptions. See docs/venue-geometry.md. Optional GLBs still need aligned colliders.
 - Model loading supports GLB and embedded clips but generated-model orientation, skeletal compatibility and animation acceptance remain untested.
 - Server restarts reset in-memory rooms. Demo DNS uses sslip.io; Caddy route restoration uses a one-minute cron job.
 - Two people on physical devices still need to play the production URL.
@@ -35,3 +39,23 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 ## Next actions
 
 Finish production single-arena/mobile checks, push one initial commit to the public GitHub repository, then enable/test avatar generation when credentials are supplied.
+
+## Floor-plan correction (local branch)
+
+Replaced the rectangular event approximation with a shared architectural trace. Added rotated collision/hitscan/camera support and `/venue` for source-overlay review. Neutral geometry precedes the photo/material pass. Not deployed to production.
+
+Current branch validation: web/server typecheck, 12 tests, final production build and local eight-client network test pass. Browser verified actual local-server gameplay, source-overlay controls, 3D orbit and responsive plan framing without page errors. Screenshots are local in artifacts/. No production deployment of this geometry change.
+
+Simulator validation: all 15 tests pass (including walking speed/normalization, tall ceiling proportions, room destinations and collision); web/server typecheck and production build pass. Local browser checks verified keyboard walking, Escape mouse release, room shortcuts/reset, touch walking, and standalone rendering with no game-server requests or page errors. Screenshots: artifacts/tour-boat-space.png, artifacts/tour-atrium.png and artifacts/tour-mobile.png. No production deployment.
+
+Photo batch 1 correction: the user identified the photos as room 2 and the tall roof zone as the dashed square 1. The model regions, room detection and navigation labels now follow that clarification. Concrete finishes cover this hall; room 2's dark roof placeholder has a cutout over square 1. The raised roof/glazing are now represented as an explicitly provisional timber/masonry/clerestory assembly; upper height is estimated at 8 m pending measurement. No new partitions or inferred wall openings. See docs/room-02-photo-survey.md. Both regions remain incomplete.
+
+Event stage: user placed it around marker 2. Reconstructed photo-estimated platform, screen, lattice lectern, speaker stands, roll-up banners and black draping; no people, tables or chairs. Added stage navigation, shared event colliders and deck-relative first-person eye level. Sixteen tests pass, including stage step-up, screen occlusion and return to ground level. Dimensions/anchor remain explicitly photo-estimated.
+
+Stage validation: final production build/typecheck pass. Browser entered the tour, selected Stage / room 2, approached/left the deck and reset to the entrance without page errors. Preview saved to artifacts/room-02-stage.png. Stage placement and dimensions remain estimates, not a completed room survey. No push or deployment.
+
+Room-2 detail pass: added photo-supported masonry/concrete finishes, gate ribs/rail, roof members/column lighting, leaning red decorative panel, DevDay/OpenAI backdrop with registration table, timber-top tables, instanced folding chairs and brown lounge seating. Exact count/placement, member dimensions and original print artwork remain estimates, tracked in docs/room-02-photo-survey.md. Furniture is shown by default; solid collisions are optional. All 17 tests pass, including clear destinations and furniture collision modes.
+
+Final detail-pass verification: production build/typecheck and 17 tests pass. Self-contained export was browser-checked for furniture visibility/solid controls, banner navigation, embedded plan overlay and mobile layout, with no page errors or external asset requests. Updated download: artifacts/hoxton-docks-simulator-detailed.html. Evidence limits and provisional placements remain documented; no production deployment.
+
+Room 1 correction: tall paired timber doors, frame/rail/hardware, concrete header, raised brickwork, upper loading panel, clerestory/mullions, hoist chain and provisional upper roof added over square 1. Added overview shortcut and closed-door collisions. Room 5 / Atrium is the next requested photo priority. See docs/room-01-timber-bay.md.
