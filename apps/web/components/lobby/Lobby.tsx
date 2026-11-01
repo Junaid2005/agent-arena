@@ -23,34 +23,8 @@ export function Lobby() {
   };
   return (
     <div className="lobby simple-lobby">
-      <header className="lobby-header">
-        <a className="brand" href="/" aria-label="Agent Arena home">
-          <span className="ghost-mark">
-            <GhostMark />
-          </span>
-          <span>
-            AGENT<span className="brand-light">ARENA</span>
-          </span>
-        </a>
-        <span className="build-tag">
-          <i />
-          ONE ARENA. ALWAYS ON.
-        </span>
-      </header>
-      <section className="hero">
-        <div className="eyebrow">
-          <span className="tiny-cross">✳</span> GOOD FRIENDS. QUESTIONABLE AIM.
-        </div>
-        <h1>
-          MAKE A<br />
-          <span>MESS.</span>
-          <span className="hero-asterisk">✳</span>
-        </h1>
-        <p className="hero-copy">
-          The paint never dries. The game never stops.
-          <br />
-          Pick a pet. Get a gun. Every kill shuffles it.
-        </p>
+      <section className="hero" aria-labelledby="arena-title">
+        <h1 id="arena-title">AGENT <span>ARENA</span></h1>
         <form
           className="join-card"
           onSubmit={(e) => {
@@ -86,7 +60,6 @@ export function Lobby() {
                 >
                   <span className="pet-preview" style={{ backgroundImage: `url(${item.sprite})` }} />
                   <strong>{item.name}</strong>
-                  <small>{pet === id ? 'SELECTED' : 'PLAY AS ' + item.name.toUpperCase()}</small>
                 </button>
               ))}
             </div>
@@ -110,27 +83,9 @@ export function Lobby() {
             )}
           </button>
         </form>
+        <div className="pet-poster" aria-hidden="true" style={{ backgroundImage: `url(${PETS[pet].sprite})` }} />
       </section>
-      <div className="pet-poster" aria-hidden="true" style={{ backgroundImage: `url(${PETS[pet].sprite})` }} />
-      <div className="arena-caption">
-        <span className="live-label">
-          <i />
-          LIVE / LONDON
-        </span>
-        <h2>
-          DEV DAY
-          <br />
-          EXCHANGE<span>↗</span>
-        </h2>
-        <p>YOUR VENUE. EVERYONE’S PLAYGROUND.</p>
-      </div>
-      <footer className="lobby-footer">
-        <div>
-          <span className="footer-dot" />
-          NO HARD FEELINGS. JUST PAINT.
-        </div>
-        <span>ALWAYS LIVE. ALWAYS A MESS.</span>
-      </footer>
+      <footer className="venue-name">DEV DAY EXCHANGE</footer>
     </div>
   );
 }
