@@ -5,7 +5,7 @@ The default frontend is now a standalone first-person tour. Human eye level is 1
 # GHOST ARENA status
 
 Public frontend: https://ghost-arena-theta.vercel.app
-Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
+Game health: https://ghost-arena-theta.vercel.app/api/health
 
 ## Completed implementation
 
@@ -15,7 +15,8 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 - [x] M5 partial: Articulated default humanoid, cosmetic wobble, strides, recoil, dive, stumble and collapse; synchronized knockdown state
 - [x] M6 blockout: Shared ground-floor trace at the architectural plan’s published 1:200 / A3 scale, neutral rooms/walls, rotated collisions and source-overlay review; photo/material layer deferred
 - [x] M7: Responsive lobby/HUD and PUBG-style touch movement, right-side aiming, dedicated fire/jump/dive buttons
-- [x] M8 deployment: Vercel production build, persistent VPS container, HTTPS/WSS proxy, CORS and health endpoint
+- [x] M8 deployment: Vercel frontend and native WebSocket game routes; shared Upstash Redis state, health endpoint and automatic reconnection.
+- Live commentary remains available on the standalone server; Vercel commentary integration is deferred.
 
 ## Verification
 
@@ -33,12 +34,12 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 - Real ragdoll simulation and spectator mode are not implemented.
 - Venue horizontal geometry now follows the supplied architectural drawing at its published 1:200 / A3 scale. This is illustrative, not surveyed; heights/thicknesses and ambiguous openings remain assumptions. See docs/venue-geometry.md. Optional GLBs still need aligned colliders.
 - Model loading supports GLB and embedded clips but generated-model orientation, skeletal compatibility and animation acceptance remain untested.
-- Server restarts reset in-memory rooms. Demo DNS uses sslip.io; Caddy route restoration uses a one-minute cron job.
+- Longer Vercel soak/load tests remain deferred for the MVP; free Redis quotas limit sustained traffic.
 - Two people on physical devices still need to play the production URL.
 
 ## Next actions
 
-Finish production single-arena/mobile checks, push one initial commit to the public GitHub repository, then enable/test avatar generation when credentials are supplied.
+Merge the Vercel migration PR to preserve this setup on future Git deployments. Follow up with production soak/mobile checks and avatar generation when credentials are supplied.
 
 ## Floor-plan correction (local branch)
 
@@ -69,7 +70,6 @@ Room 1 correction: tall paired timber doors, frame/rail/hardware, concrete heade
 - GitHub CI runs successfully with all eight tests, type checking and the production build.
 - Added CI for web/server type checking, unit tests and production frontend builds.
 - Corrected the existing solo-combat test fixture to keep companion fire on cooldown; player-shot and respawn assertions remain intact.
-- The VPS server is separate from Vercel’s frontend deployment pipeline.
 
 Pre-push integration: merged the latest feat/ghost-arena teammate updates, preserving pets, spatial audio and CI. Both player/pet rays use rotated venue geometry; the pet fixture now exercises a clear line in the new Atrium. All 23 combined tests, web/server type checks and the production build pass. Browser verified timber-bay views, the provisional-height label and room-5 navigation without page errors.
 
@@ -78,3 +78,27 @@ Room 5 / Atrium photo pass: implemented the pitched roof, two skylight runs, tru
 Room-5 validation: 25 combined tests, server/web typecheck and final production build pass. Standalone browser verified both end views and the solid-furniture control with no page errors. User accepted 5.5 m wall reference; ridge remains a provisional 7.5 m. Download: artifacts/hoxton-docks-simulator-room5.html.
 
 MVP pass: added room 3's low textured ceiling, steel supports, factory windows, benches, catering setup and service objects; room 11's brick yard, festoons, picnic seating, sofas, planters and rails; and the front entrance's AVERY scale, open timber doors, banners and pressed ceiling. Locked rooms 4/7/8/10 have visible shared door collision, WC signage and no interior teleport shortcuts. Public passages are preserved. Shared masonry/concrete textures fill blank surfaces at the user's request; extrapolated finishes are documented in docs/venue-mvp.md. Room 3's full furniture-solid aisle is tested. Navigation/overlays are responsive. Initial combined verification: 28 tests, typecheck and production build passed; final browser review follows.
+
+- Production frontend and multiplayer now deploy together on Vercel; the old VPS game service is retired.
+
+## Landing-page scrolling
+
+- The lobby now scrolls vertically on short laptop windows; its form and footer participate in normal layout rather than clipping below the viewport.
+- The 3D background stays fixed while the lobby scrolls.
+- Browser-verified at 1366×620, 1280×720 and 390×844: mouse-wheel scrolling reaches the entry button without horizontal overflow.
+- Confirmed entering the arena still produces a fixed 620px-high game viewport with scrolling disabled. Web/server type checking passes.
+
+## Vercel multiplayer MVP — 1 November 2026
+
+- Upstash free Redis linked to production and previews, automatic paid upgrades disabled; secrets remain server-side.
+- Native WSS `/api/arena`, Redis leader fencing, private checkpoints, cross-instance input/snapshot relay and reconnect identity. Production and Redis run in `iad1`.
+- Type checking, 47 unit tests, two-instance/eight-client Redis integration and production build passed locally. Dependency audit: zero vulnerabilities.
+- Actual Vercel candidate and public production URL both passed the short two-client smoke: health, shared movement, manual shots and reconnect identity.
+- Candidate `dpl_6EGuxyKoe24AqLrRiieEwwmwgePD` promoted to the public URL. Website and game health return HTTP 200.
+- Full production combat/load/long-duration testing deferred at the user's request. No two-human physical-device test claimed.
+- Retired the VPS game container, its proxy-restoration cron and its Caddy route; unrelated services were left running.
+- Integrated teammate pet-character and random-gun changes; updated distributed combat fixture passes. Vercel uses a new state namespace for the weapon protocol; existing sessions should reload after cutover.
+
+## Venue MVP integration with current game
+
+Merged the current `feat/ghost-arena` implementation into the venue branch. The simulator remains the default route; `/paintball` retains the playable-pet lobby, random weapons, spatial audio and current multiplayer UI. Redis/Vercel routes, commentary, deployment configuration and CI remain intact. Shared weapon, splash and cone occlusion now use the same rotated venue walls as movement and the camera. Weapon, commentary-zone and distributed-network fixtures follow the new drawing geometry. Worktree-local dependency installation, combined server/web type checking and all 63 unit tests passed.
