@@ -1685,18 +1685,6 @@ kbd {
     transition-duration: 0.01ms !important;
   }
 }
-.simple-lobby .hero {
-  top: 23%;
-}
-.simple-lobby .join-card {
-  padding: 24px;
-}
-.simple-lobby .play-button {
-  margin-top: 24px;
-}
-.simple-lobby .name-field {
-  padding-bottom: 14px;
-}
 .live-arena-badge {
   font-size: 8px;
   letter-spacing: 1.2px;
@@ -1710,24 +1698,7 @@ kbd {
   border-radius: 50%;
   box-shadow: 0 0 9px #b9fa4466;
 }
-@media (max-width: 760px) {
-  .simple-lobby .hero {
-    top: 19%;
-  }
-  .simple-lobby.lobby {
-    min-height: 600px;
-  }
-  .simple-lobby .lobby-footer > span {
-    display: none;
-  }
-}
-@media (max-height: 600px) and (orientation: landscape) {
-  .simple-lobby .hero {
-    top: 100px;
-  }
-}
-
-/* Keep the full entry form reachable in short laptop windows. */
+/* A centered lobby with one title, the selected sprite and the entry controls. */
 .lobby-shell {
   height: 100dvh;
   min-height: 0;
@@ -1740,34 +1711,83 @@ kbd {
 .simple-lobby.lobby {
   position: relative;
   min-height: 100%;
+  padding: clamp(28px, 5dvh, 64px) clamp(20px, 5vw, 80px) 24px;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
-}
-.simple-lobby .lobby-header {
-  flex-shrink: 0;
+  align-items: center;
+  background: linear-gradient(90deg, #172421ed, #17242188 50%, #172421aa);
 }
 .simple-lobby .hero {
   position: relative;
   top: auto;
-  flex-shrink: 0;
-  margin-top: clamp(24px, calc(23dvh - 100px), 120px);
-  margin-bottom: 48px;
+  left: auto;
+  width: 100%;
+  max-width: 980px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 4vw, 64px);
 }
-.simple-lobby .lobby-footer {
+.simple-lobby h1 {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(48px, 9.5vw, 132px);
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+.simple-lobby .join-card {
+  width: 100%;
+  padding: 24px;
+}
+.simple-lobby .play-button {
+  margin-top: 20px;
+}
+.simple-lobby .pet-grid {
+  margin-top: 12px;
+}
+.simple-lobby .pet-choice {
+  min-height: 76px;
+  gap: 5px;
+}
+.simple-lobby .pet-poster {
   position: relative;
-  bottom: auto;
+  display: block;
   right: auto;
-  width: 92%;
-  flex-shrink: 0;
-  margin-top: auto;
+  bottom: auto;
+  justify-self: center;
+  width: min(100%, 400px);
+  height: auto;
+  aspect-ratio: 1 / 1.08;
+  image-rendering: pixelated;
+  mask-image: none;
 }
-@media (max-width: 760px) {
+.venue-name {
+  margin-top: 32px;
+  padding: 0 0 4px;
+  color: #f3f1dfb3;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-align: center;
+}
+@media (max-width: 600px) {
   .simple-lobby .hero {
-    margin-top: clamp(24px, calc(19dvh - 82px), 120px);
+    max-width: 400px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
   }
-  .simple-lobby .lobby-footer {
-    width: 86%;
+  .simple-lobby h1 {
+    font-size: clamp(42px, 10vw, 60px);
+  }
+  .simple-lobby .pet-poster {
+    grid-row: 2;
+    width: 140px;
+  }
+  .simple-lobby .join-card {
+    padding: 18px;
   }
 }
 
