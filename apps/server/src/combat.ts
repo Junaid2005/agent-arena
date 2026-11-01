@@ -1,2 +1,2 @@
-// Shared ballistics are also used for practice; only the server supplies live opponents.
+// Live ballistics are evaluated by the authoritative server.
 export { shoot, explode, rayBox } from '../../../packages/shared/src/combat.ts';
