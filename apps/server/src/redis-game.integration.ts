@@ -7,6 +7,7 @@ import type { AddressInfo } from 'node:net';
 import type { Input, Snapshot, Shot } from '../../../packages/shared/src/types.ts';
 import type { JoinReply } from '../../../packages/shared/src/protocol.ts';
 import type { ServerPacket } from '../../../packages/shared/src/websocket.ts';
+import { Commentator, type CommentatorOptions } from './commentator.ts';
 import { localArena } from './vercel-local.ts';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,6 +25,7 @@ class Client {
   reply?: Extract<JoinReply, { ok: true }>;
   failure?: string;
   shots: Shot[] = [];
+  commentary: ServerPacket[] = [];
   seq = 0;
   lastInput = Date.now();
   heartbeat: ReturnType<typeof setInterval>;
@@ -48,6 +50,8 @@ class Client {
         } else this.failure = packet.data.error;
       } else if (packet.event === 'snapshot') this.snapshot = packet.data;
       else if (packet.event === 'shot') this.shots.push(packet.data);
+      else if (packet.event === 'commentaryAudio' || packet.event === 'commentaryText')
+        this.commentary.push(packet);
     });
   }
   get me() {
@@ -109,8 +113,27 @@ test(
     const url = process.env.REDIS_URL || process.env.KV_URL || 'redis://127.0.0.1:6387';
     const prefix = `ghost-test:${randomUUID()}`;
     const redis = new Redis(url);
-    const first = localArena(url, prefix),
-      second = localArena(url, prefix);
+    let casters = 0;
+    const createCommentator = (options: CommentatorOptions) =>
+      new Commentator({
+        ...options,
+        env: { DEEPGRAM_API_KEY: 'test-key' },
+        createCaster: (callbacks) => ({
+          ready: true,
+          start() {
+            casters++;
+          },
+          stop() {
+            casters--;
+          },
+          inject(text) {
+            callbacks.onText(text);
+            callbacks.onAudio(Buffer.from([0, 1, 2, 3]));
+          },
+        }),
+      });
+    const first = localArena(url, prefix, createCommentator),
+      second = localArena(url, prefix, createCommentator);
     const clients: Client[] = [];
     const listen = async (arena: typeof first) => {
       await new Promise<void>((resolve) => arena.server.listen(0, '127.0.0.1', resolve));
@@ -134,6 +157,16 @@ test(
       console.log('PASS: clients on separate processes see one arena');
       await alice.navigate(11, 14);
       await alice.navigate(11, 12);
+      await until(
+        () => alice.commentary.length >= 2 && bob.commentary.length >= 2,
+        'shared commentary missing',
+      );
+      assert.equal(casters, 1, 'only the simulation owner opens a commentator');
+      assert.deepEqual(alice.commentary.slice(0, 2), bob.commentary.slice(0, 2));
+      const audio = bob.commentary.find((p) => p.event === 'commentaryAudio');
+      assert.ok(audio?.event === 'commentaryAudio');
+      assert.deepEqual([...Buffer.from(audio.data.pcm, 'base64')], [0, 1, 2, 3]);
+      console.log('PASS: one commentator broadcasts identical PCM and captions across instances');
       await bob.navigate(-11, 6.8);
       await bob.navigate(-4, 6.8);
       await bob.navigate(-4, 8.7);
@@ -178,6 +211,7 @@ test(
       firstClosed = true;
       await until(() => second.game.isLeader, 'new instance did not acquire authority', 5_000);
       const resumed = await create(two, 'Alice', identity.token);
+      assert.equal(casters, 0, 'retired owner closes the billed commentary session');
       assert.equal(resumed.reply!.id, identity.id);
       assert.equal(resumed.me!.score, alice.me!.score);
       console.log(

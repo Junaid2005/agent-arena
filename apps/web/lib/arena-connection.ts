@@ -85,7 +85,11 @@ export function connectArena(serverUrl: string, handlers: Handlers): ArenaConnec
         }
       } else if (packet.event === 'snapshot' && joined) handlers.snapshot(packet.data);
       else if (packet.event === 'shot' && joined) handlers.shot(packet.data);
-      else if (packet.event === 'error') handlers.error(packet.data);
+      else if (packet.event === 'commentaryText' && joined) handlers.commentaryText?.(packet.data);
+      else if (packet.event === 'commentaryAudio' && joined) {
+        const bytes = Uint8Array.from(atob(packet.data.pcm), (c) => c.charCodeAt(0));
+        handlers.commentaryAudio?.({ turn: packet.data.turn, pcm: bytes });
+      } else if (packet.event === 'error') handlers.error(packet.data);
     };
     current.onerror = () => handlers.error('Cannot reach the arena. Reconnecting…');
     current.onclose = (event) => {
