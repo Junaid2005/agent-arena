@@ -6,4 +6,6 @@ export type ServerPacket =
   | { event: 'joined'; data: JoinReply }
   | { event: 'snapshot'; data: Snapshot }
   | { event: 'shot'; data: Shot }
-  | { event: 'error'; data: string };
+  | { event: 'error'; data: string }
+  | { event: 'commentaryAudio'; data: { turn: number; pcm: string } }
+  | { event: 'commentaryText'; data: { turn: number; text: string } };

@@ -8,6 +8,7 @@ import { idleInput, snapshot, type Member, type Room } from './rooms.ts';
 import { newPlayer } from './players.ts';
 import { simulate } from './simulation.ts';
 import { cleanName, validateInput } from './validation.ts';
+import { Commentator, type CommentatorOptions } from './commentator.ts';
 import { isPetId } from '../../../packages/shared/src/pets.ts';
 
 // Renew ownership, save the complete authoritative state and broadcast one frame atomically.
@@ -45,7 +46,12 @@ type Frame = {
   kicks: string[];
   reconnects: string[];
 };
-type BusMessage = Frame | { type: 'commands'; commands: Command[] };
+type CommentaryPacket = Extract<ServerPacket, { event: 'commentaryAudio' | 'commentaryText' }>;
+type BusMessage =
+  | Frame
+  | { type: 'commands'; commands: Command[] }
+  | { type: 'commentary'; packet: CommentaryPacket };
+const BROADCAST = `if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end return redis.call('PUBLISH', KEYS[2], ARGV[2])`;
 type SavedRoom = Omit<Room, 'members'> & { members: [string, Member][] };
 
 function freshRoom(): Room {
@@ -106,8 +112,15 @@ export class RedisGame {
   private leader = false;
   private nextElection = 0;
   private ready: Promise<void>;
+  private commentator?: Commentator;
+  private createCommentator: (options: CommentatorOptions) => Commentator;
 
-  constructor(url = redisUrl(), prefix = statePrefix()) {
+  constructor(
+    url = redisUrl(),
+    prefix = statePrefix(),
+    createCommentator = (options: CommentatorOptions) => new Commentator(options),
+  ) {
+    this.createCommentator = createCommentator;
     this.redis = client(url);
     this.subscriber = client(url);
     this.leaseKey = `${prefix}:owner`;
@@ -237,6 +250,10 @@ export class RedisGame {
     }
   }
   private receive(message: BusMessage) {
+    if (message.type === 'commentary') {
+      for (const local of this.peers.values()) if (local.playerId) local.peer.send(message.packet);
+      return;
+    }
     if (message.type === 'commands') {
       if (!this.leader) return;
       for (const command of message.commands) {
@@ -411,13 +428,63 @@ export class RedisGame {
         JSON.stringify(frame),
       );
       if (committed !== 1) {
+        this.stopCommentary();
         this.leader = false;
         this.controlQueue = [];
         this.inputQueue.clear();
+      } else {
+        if (!this.commentator) {
+          this.commentator = this.createCommentator({
+            env: process.env,
+            emitAudio: ({ turn, pcm }) =>
+              this.broadcastCommentary({
+                event: 'commentaryAudio',
+                data: {
+                  turn,
+                  pcm: Buffer.from(pcm instanceof Uint8Array ? pcm : new Uint8Array(pcm)).toString(
+                    'base64',
+                  ),
+                },
+              }),
+            emitText: (data) => this.broadcastCommentary({ event: 'commentaryText', data }),
+          });
+          console.log(
+            'Arena commentary:',
+            this.commentator.status.enabled
+              ? 'enabled'
+              : 'disabled (missing key or disabled setting)',
+          );
+        }
+        try {
+          this.commentator.tick(
+            [...this.room.members.values()].filter((m) => m.socketId).map((m) => m.player),
+            shots,
+            now,
+          );
+        } catch {
+          console.error('Arena commentary tick failed.');
+        }
       }
     } finally {
       this.busy = false;
     }
+  }
+  private broadcastCommentary(packet: CommentaryPacket) {
+    if (!this.leader || this.stopped) return;
+    void this.redis
+      .eval(
+        BROADCAST,
+        2,
+        this.leaseKey,
+        this.channel,
+        this.owner,
+        JSON.stringify({ type: 'commentary', packet }),
+      )
+      .catch(() => console.error('Arena commentary delivery failed.'));
+  }
+  private stopCommentary() {
+    this.commentator?.stop();
+    this.commentator = undefined;
   }
   private fail() {
     if (this.stopped) return;
@@ -430,6 +497,7 @@ export class RedisGame {
   async close() {
     if (this.stopped) return;
     this.stopped = true;
+    this.stopCommentary();
     if (this.timer) clearInterval(this.timer);
     if (this.idleTimer) clearTimeout(this.idleTimer);
     for (const request of this.requests.values())

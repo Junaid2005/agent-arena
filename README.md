@@ -2,8 +2,8 @@
 
 Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchange hackathon venue.
 
-**Play:** https://ghost-arena-theta.vercel.app
-**Server health:** https://ghost-arena-theta.vercel.app/api/health
+**Play:** https://agent-arena-paintball.vercel.app
+**Server health:** https://agent-arena-paintball.vercel.app/api/health
 
 Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Weapon damage determines how many hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; Vercel instances recover shared state from Redis.
 
@@ -34,7 +34,7 @@ Rockets explode at their traced impact point after flight time, giving targets t
 
 ## Live commentary
 
-The standalone local server can run a live shoutcaster on the public arena. Vercel commentary integration is deferred. It watches kills, streaks, dives, camping and the general state of the match, then speaks short hype lines as 16 kHz PCM audio and captions through the same Socket.IO room. The audio is generated with the Deepgram Voice Agent API and is broadcast to everyone in the arena, so all players hear one shared cast.
+The authoritative simulation owner runs one live shoutcaster for the public arena on Vercel or the standalone server. It watches kills, streaks, dives, camping and the general state of the match, then speaks short hype lines as 16 kHz PCM audio and captions through the arena connection. The audio is generated with the Deepgram Voice Agent API and is broadcast to everyone in the arena, so all players hear one shared cast.
 
 Commentary is opt-in and server-only. Set `DEEPGRAM_API_KEY` in the server process environment to enable it. For local development, put it in `apps/server/.env.local`; `npm run dev` loads that gitignored file with `--env-file-if-exists`. The key is never sent to the browser. Commentary only connects while connected players are active, and disconnects after `COMMENTARY_IDLE_MS` of inactivity, so Deepgram bills only for connected time. `COMMENTARY_ENABLED=false` turns it off without removing the key.
 
@@ -101,7 +101,7 @@ Full ragdoll simulation and spectator mode are also pending. The final two-human
 
 ## Automatic deployment and checks
 
-Vercel is connected to `Junaid2005/codex-paintabll` through its GitHub app, with automatic Git deployments enabled and Node 24 configured. The production branch is `feat/ghost-arena` (the repository’s default branch). Pushes and merged PRs to that branch publish to https://ghost-arena-theta.vercel.app; other branches receive previews. Manage the connection in [Vercel Git settings](https://vercel.com/junaid2005s-projects/ghost-arena/settings/git). No Vercel token is stored in GitHub.
+Vercel is connected to `Junaid2005/codex-paintabll` through its GitHub app, with automatic Git deployments enabled and Node 24 configured. The production branch is `feat/ghost-arena` (the repository’s default branch). Pushes and merged PRs to that branch publish to https://agent-arena-paintball.vercel.app; other branches receive previews. Manage the connection in [Vercel Git settings](https://vercel.com/junaid2005s-projects/ghost-arena/settings/git). No Vercel token is stored in GitHub.
 
 `.github/workflows/ci.yml` runs type checking, simulation/combat tests and a production build on pushes and pull requests. Vercel’s native build and this CI check run independently; branch protection can require the CI check before merging. Fork deployment authorization remains managed by Vercel.
 
