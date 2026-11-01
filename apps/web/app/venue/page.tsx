@@ -39,7 +39,7 @@ export default function VenuePage() {
   return <main className="venue-review">
     <header>
       <div><a href="/">← Walk-through tour</a><h1>Hoxton Docks / spatial model</h1>
-        <p>Ground floor · neutral geometry · 1 game unit = 1 metre at the published drawing scale</p></div>
+        <p>Ground floor · photo-informed MVP · 1 unit = 1 metre at the published drawing scale</p></div>
       <strong>Venue plan · 1:200 at A3</strong>
     </header>
     <section className="venue-tools" aria-label="Model controls">
@@ -72,7 +72,8 @@ export default function VenuePage() {
         dimensions are plan-derived and have not been surveyed onsite.</p>
       <p>Boat Space ceiling: provisional 5.5 m (brochure prose; drawing says 5.6 m). Other ceiling heights,
         0.22 m default wall thickness and 2.15 m door height await measurement. Door locations and widths are traced.
-        Private spaces are enclosed; perimeter gates are shown closed. No temporary event furniture.</p>
+        Rooms 4, 7, 8 (WC) and 10 are locked; perimeter gates are closed. Event furniture and entrance,
+        canal-room and yard details are photo estimates. Rooms without references retain placeholder finishes.</p>
       <details><summary>Room footprints at the current calibration</summary>
         <ul>{VENUE_ROOMS.filter((r) => !r.access).map((r) => <li key={r.id}>{r.name}: approximately {Math.round((polygonArea(r.outline) - (r.holes ?? []).reduce((sum, ring) => sum + polygonArea(ring), 0)) * scale * scale)} m²</li>)}</ul>
       </details>

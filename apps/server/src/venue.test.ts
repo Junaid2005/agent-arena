@@ -28,6 +28,7 @@ test('every traced opening clears the player and remains a ray-passable gap belo
   for (const wall of PLAN_WALLS.filter((w) => !w.gate)) {
     const length = Math.hypot(wall.b[0] - wall.a[0], wall.b[1] - wall.a[1]);
     for (const [i, [from, to]] of (wall.openings ?? []).entries()) {
+      if (wall.lockedOpenings?.includes(i)) continue;
       const t = (from + to) / 2 / length;
       const [x, z] = planToWorld([wall.a[0] + (wall.b[0] - wall.a[0]) * t,
         wall.a[1] + (wall.b[1] - wall.a[1]) * t]);

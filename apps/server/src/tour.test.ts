@@ -22,7 +22,7 @@ test('tour walks in real metres per second with fixed human eye level and tall w
 });
 
 test('tour destinations are clear of geometry and identify the expected room', () => {
-  const expected = ['foyer', 'boat', 'atrium', 'canal', 'bar', 'club', 'workshop', 'studio', 'recording', 'yard', 'lightwell', 'lightwell', 'lightwell', 'lightwell', 'atrium', 'atrium'];
+  const expected = ['foyer', 'boat', 'atrium', 'canal', 'bar', 'club', 'workshop', 'yard', 'lightwell', 'lightwell', 'lightwell', 'lightwell', 'atrium', 'atrium', 'canal', 'canal', 'lightwell', 'foyer'];
   for (let i = 0; i < TOUR_STOPS.length; i++) {
     const p = tourPosition(i);
     assert.equal(tourRoom(p)?.id, expected[i]);

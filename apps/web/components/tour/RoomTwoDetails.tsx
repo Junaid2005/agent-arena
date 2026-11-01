@@ -133,7 +133,7 @@ export function RoomTwoFeatures() {
       const [x, z] = planToWorld(p);
       return <group key={i} position={[x, 5.1, z]}>
         <mesh position={[0, 0, 0.16]} rotation={[0.4, 0, 0]}><boxGeometry args={[0.09, 0.12, 0.07]} /><meshStandardMaterial color="#282b2d" /></mesh>
-        <pointLight position={[0, -0.2, 0.3]} color={i % 2 ? '#6b66ff' : '#35b9df'} intensity={0.7} distance={2.5} />
+        <mesh position={[0, -0.07, 0.2]}><sphereGeometry args={[0.035, 6, 4]} /><meshStandardMaterial color={i % 2 ? '#6b66ff' : '#35b9df'} emissive={i % 2 ? '#6b66ff' : '#35b9df'} emissiveIntensity={1.2} /></mesh>
       </group>;
     })}
   </group>;

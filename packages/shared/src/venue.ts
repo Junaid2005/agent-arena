@@ -10,6 +10,8 @@ export function polygonArea(points: readonly PlanPoint[]) {
     return sum + p[0] * q[1] - q[0] * p[1];
   }, 0)) / 2;
 }
+// Photo-based Canal Room ceiling estimate; replace when measured onsite.
+export const CANAL_ROOM_HEIGHT = 3.4;
 const atrium: PlanPoint[] = [[651, 365], [1057, 371], [1052, 528], [652, 523]];
 export const VENUE_CALIBRATION = {
   status: 'published-drawing-scale' as const,
@@ -39,7 +41,7 @@ export const VENUE_ROOMS: VenueRoom[] = [
     outline: [[306, 279], [374, 275], [370, 158], [434, 124], [494, 230], [644, 257], [650, 523], [637, 570], [644, 716], [544, 732], [534, 580], [324, 587], [310, 324]] },
   { id: 'canal', name: '3 / CANAL ROOM', color: '#d5e4e8', label: [760, 331],
     outline: [[650, 260], [906, 316], [906, 368], [651, 365]] },
-  { id: 'kitchen', name: '4 / KITCHEN', color: '#e5dfd0', label: [978, 349],
+  { id: 'kitchen', name: '4 / KITCHEN / LOCKED', access: 'private', color: '#b4b1a8', label: [978, 349],
     outline: [[906, 316], [1057, 344], [1057, 371], [906, 368]] },
   { id: 'atrium', name: '5 / ATRIUM', color: '#dbe4db', label: [843, 448], outline: atrium },
   { id: 'court-west', name: '6 / COURTYARD', color: '#b9c9b1', access: 'outdoor', label: [773, 549],
@@ -48,13 +50,13 @@ export const VENUE_ROOMS: VenueRoom[] = [
     outline: [[948, 528], [1052, 528], [1044, 575], [948, 575]] },
   { id: 'vestibule', name: 'ATRIUM ACCESS', color: '#dbe4db', label: [921, 546],
     outline: [[895, 526], [948, 528], [948, 575], [895, 573]] },
-  { id: 'studio', name: '7 / PHOTO STUDIO', color: '#e2dde7', label: [531, 801],
+  { id: 'studio', name: '7 / PHOTO STUDIO / LOCKED', access: 'private', color: '#b7b2bc', label: [531, 801],
     outline: [[469, 721], [544, 716], [548, 732], [593, 730], [604, 882], [476, 889]] },
-  { id: 'toilets', name: '8 / RESTROOMS', color: '#d9e1e2', label: [680, 790],
+  { id: 'toilets', name: '8 / WC / LOCKED', access: 'private', color: '#aab7ba', label: [680, 790],
     outline: [[645, 725], [710, 724], [714, 806], [651, 809]] },
   { id: 'cloakroom', name: '9 / CLOAKROOM', color: '#e2dde7', label: [787, 773],
     outline: [[754, 723], [792, 722], [822, 749], [822, 803], [757, 805]] },
-  { id: 'recording', name: '10 / RECORDING', color: '#e2dde7', label: [702, 850],
+  { id: 'recording', name: '10 / RECORDING / LOCKED', access: 'private', color: '#b7b2bc', label: [702, 850],
     outline: [[651, 809], [822, 803], [750, 880], [750, 898], [653, 898]] },
   { id: 'yard', name: '11 / YARD', color: '#d7cebb', access: 'outdoor', label: [1024, 808],
     outline: [[934, 721], [1336, 712], [1336, 388], [1388, 388], [1388, 898], [750, 898], [750, 880]] },
@@ -78,7 +80,9 @@ export const VENUE_ROOMS: VenueRoom[] = [
 
 export type PlanWall = { id: string; a: PlanPoint; b: PlanPoint; thickness?: number;
   /** Distances in trace pixels from a; gaps preserve door locations and widths. */
-  openings?: readonly (readonly [number, number])[]; gate?: boolean; openingHeight?: number; height?: number };
+  openings?: readonly (readonly [number, number])[]; gate?: boolean;
+  /** Closed room doors by opening index; public openings on the same wall stay clear. */
+  lockedOpenings?: readonly number[]; openingHeight?: number; height?: number };
 export const PLAN_WALLS: PlanWall[] = [
   { id: 'west-north', a: [294, 48], b: [312, 380] },
   { id: 'west-gate', a: [312, 380], b: [324, 587], openings: [[110, 164]], gate: true },
@@ -89,8 +93,9 @@ export const PLAN_WALLS: PlanWall[] = [
   { id: 'north-canal', a: [644, 257], b: [1057, 344] },
   { id: 'north-private', a: [1057, 344], b: [1336, 388] },
   { id: 'yard-north', a: [1336, 388], b: [1388, 388] },
-  { id: 'yard-east', a: [1388, 388], b: [1388, 898] },
-  { id: 'yard-gates', a: [750, 898], b: [1388, 898], openings: [[116, 200], [520, 607]], gate: true },
+  { id: 'yard-east', a: [1388, 388], b: [1388, 898], height: 3.4 },
+  { id: 'yard-gates', a: [750, 898], b: [1388, 898], height: 3.4, openingHeight: 3,
+    openings: [[116, 200], [520, 607]], gate: true },
   { id: 'south-recording', a: [653, 898], b: [750, 898] },
   { id: 'south-step', a: [653, 898], b: [652, 882] },
   { id: 'south-studios', a: [345, 891], b: [652, 882], openings: [[270, 292]], gate: true },
@@ -103,7 +108,7 @@ export const PLAN_WALLS: PlanWall[] = [
     openings: [[30, 78], [217, 262]] },
   { id: 'boat-bar', a: [637, 570], b: [642, 670] },
   { id: 'canal-atrium', height: 5.5, a: [651, 365], b: [1057, 371], openings: [[219, 243]] },
-  { id: 'kitchen-canal', a: [906, 316], b: [906, 368], openings: [[14, 40]] },
+  { id: 'kitchen-canal', lockedOpenings: [0], a: [906, 316], b: [906, 368], openings: [[14, 40]] },
   { id: 'atrium-private', height: 5.5, a: [1057, 344], b: [1052, 528], thickness: 0.4 },
   { id: 'atrium-court-west', height: 5.5, a: [652, 523], b: [895, 527], openings: [[5, 22], [98, 121]] },
   { id: 'atrium-court-east', height: 5.5, a: [948, 528], b: [1052, 528], openings: [[21, 45]] },
@@ -124,20 +129,20 @@ export const PLAN_WALLS: PlanWall[] = [
   { id: 'workshop-diagonal', a: [866, 719], b: [948, 575] },
   { id: 'workshop-return', a: [866, 719], b: [876, 731] },
   { id: 'private-east-court', a: [991, 575], b: [1044, 575] },
-  { id: 'private-east-yard', a: [991, 712], b: [1336, 712] },
+  { id: 'private-east-yard', a: [991, 712], b: [1336, 712], height: 3.4 },
   { id: 'private-east-end', a: [1336, 388], b: [1336, 712] },
   { id: 'private-east-room', a: [1166, 360], b: [1166, 577] },
   { id: 'private-east-room-base', a: [1166, 577], b: [1336, 577] },
-  { id: 'studio-top', a: [544, 732], b: [645, 725], openings: [[12, 41], [78, 96]] },
-  { id: 'studio-stair', a: [593, 730], b: [604, 882], openings: [[35, 54]] },
-  { id: 'stair-toilets', a: [645, 725], b: [652, 882], openings: [[15, 32]] },
-  { id: 'toilets-top', a: [645, 725], b: [792, 722], openings: [[17, 33]] },
+  { id: 'studio-top', lockedOpenings: [0], a: [544, 732], b: [645, 725], openings: [[12, 41], [78, 96]] },
+  { id: 'studio-stair', lockedOpenings: [0], a: [593, 730], b: [604, 882], openings: [[35, 54]] },
+  { id: 'stair-toilets', lockedOpenings: [0], a: [645, 725], b: [652, 882], openings: [[15, 32]] },
+  { id: 'toilets-top', lockedOpenings: [0], a: [645, 725], b: [792, 722], openings: [[17, 33]] },
   { id: 'toilets-east', a: [710, 724], b: [714, 806] },
   { id: 'toilets-lobby', a: [645, 764], b: [712, 762], openings: [[38, 55]] },
   { id: 'cloak-west', a: [754, 723], b: [757, 805] },
   { id: 'cloak-east', a: [822, 749], b: [822, 815] },
   { id: 'recording-top', a: [651, 809], b: [822, 803] },
-  { id: 'foyer-yard', a: [750, 880], b: [934, 721], openings: [[16, 39], [103, 143]] },
+  { id: 'foyer-yard', lockedOpenings: [0], a: [750, 880], b: [934, 721], openings: [[16, 39], [103, 143]] },
   { id: 'recording-step', a: [750, 880], b: [750, 898] },
 ];
 
@@ -162,8 +167,8 @@ export const VENUE_WALLS: Box[] = PLAN_WALLS.flatMap((wall) => {
     boxes.push(segmentBox(`${wall.id}-${i}`, point(start), point(from), h, 0, thickness));
     boxes.push(segmentBox(`${wall.id}-lintel-${i}`, point(from), point(to), h - doorHeight,
       doorHeight, thickness));
-    // Perimeter gates are closed, visible panels, not invisible boundaries.
-    if (wall.gate) boxes.push(segmentBox(`${wall.id}-gate-${i}`, point(from), point(to),
+    // Perimeter gates and locked room doors share visible, solid panels.
+    if (wall.gate || wall.lockedOpenings?.includes(i)) boxes.push(segmentBox(`${wall.id}-gate-${i}`, point(from), point(to),
       doorHeight, 0, 0.1, '#737f89'));
     start = to;
   }
@@ -174,8 +179,10 @@ const columnPoints: PlanPoint[] = [[378, 377], [384, 485], [444, 483], [527, 478
   [526, 371], [589, 577], [710, 298], [767, 296], [837, 310], [973, 339], [1040, 349]];
 export const VENUE_SOLIDS: Box[] = columnPoints.map((p, i) => {
   const [x, z] = planToWorld(p);
-  return { id: `column-${i}`, position: [x, 2.75, z], size: [0.28, 5.5, 0.28],
-    color: '#87929a', kind: 'wall' };
+  const canalSteel = i >= 6 && i <= 8;
+  const height = canalSteel ? CANAL_ROOM_HEIGHT : 5.5;
+  return { id: `column-${i}`, position: [x, height / 2, z], size: [0.28, height, 0.28],
+    color: canalSteel ? '#272b2c' : '#87929a', kind: 'wall' };
 });
 // Container and stored timber are physical obstructions, not invented event furniture.
 for (const [id, a, b, depth] of [

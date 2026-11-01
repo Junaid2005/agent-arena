@@ -7,7 +7,8 @@ import { TOUR, TOUR_STOPS, TOUR_FURNITURE_SOLIDS, tourPosition, tourRoom, walkTo
 import { VENUE_CALIBRATION } from '../../../../packages/shared/src/venue';
 import { circleBoxOverlap } from '../../../../packages/shared/src/geometry';
 import { ROOM_ONE } from '../../../../packages/shared/src/roomOne';
-import { ROOM_FIVE, atriumYaw } from '../../../../packages/shared/src/roomFive';
+import { ROOM_FIVE } from '../../../../packages/shared/src/roomFive';
+import { ROOM_THREE } from '../../../../packages/shared/src/roomThree';
 import './tour.css';
 
 type Navigation = {
@@ -34,7 +35,7 @@ function Walker({ nav, report }: { nav: Navigation; report: (text: string) => vo
   return null;
 }
 export default function VenueTour() {
-  const nav = useRef<Navigation>({ position: tourPosition(), yaw: Math.PI / 2, pitch: 0,
+  const nav = useRef<Navigation>({ position: tourPosition(), yaw: TOUR_STOPS[0].yaw ?? 0, pitch: 0,
     keys: new Set(), touchX: 0, touchZ: 0, active: false, locked: false, solidFurniture: false }).current;
   const [started, setStarted] = useState(false), [locked, setLocked] = useState(false);
   const [room, setRoom] = useState('ENTRANCE / CIRCULATION');
@@ -91,8 +92,8 @@ export default function VenueTour() {
   const begin = () => { nav.active = true; setStarted(true); (document.activeElement as HTMLElement)?.blur(); capture(); };
   const goTo = (index: number) => {
     resetInput(); nav.position = tourPosition(index);
-    nav.yaw = index === 1 ? -2.62 : index === 13 ? 3.015 : index === 12 ? 0.74 : index === 15 ? atriumYaw(false) : index === 0 ? Math.PI / 2 : index === 2 || index === 14 ? atriumYaw() : 0;
-    nav.pitch = index === 1 ? 0.18 : index === 13 || index === 14 ? 0.14 : index === 2 || index === 15 ? 0.08 : 0;
+    nav.yaw = TOUR_STOPS[index].yaw ?? 0;
+    nav.pitch = TOUR_STOPS[index].pitch ?? 0;
     setStop(index); setRoom(TOUR_STOPS[index].name.toUpperCase());
   };
   const pad = (label: string, x: number, z: number) => <button aria-label={label}
@@ -115,9 +116,9 @@ export default function VenueTour() {
       <Canvas camera={{ fov: 65, near: 0.05, far: 160 }} dpr={[1, 1.7]}
         fallback={<p className="tour-no-webgl">This tour needs a browser with WebGL enabled.</p>}>
         <color attach="background" args={['#cddce5']} />
-        <ambientLight intensity={1.8} />
-        <hemisphereLight args={['#ffffff', '#8d928b', 1.4]} />
-        <directionalLight position={[-10, 25, 10]} intensity={1.5} />
+        <ambientLight intensity={1.1} />
+        <hemisphereLight args={['#ffffff', '#8d928b', 0.95]} />
+        <directionalLight position={[-10, 25, 10]} intensity={1.1} />
         <VenueModel ceilings labels={false} eventSetup furniture={furniture} />
         <Walker nav={nav} report={setRoom} />
       </Canvas>
@@ -131,6 +132,7 @@ export default function VenueTour() {
       <p>1 unit = 1 metre · Eye level {TOUR.eyeHeight.toFixed(2)} m</p>
       {room.includes('HIGH BAY') && <p>Upper roof {ROOM_ONE.upperRoofHeight.toFixed(1)} m · provisional photo estimate</p>}
       {room.includes('ATRIUM') && <p>Eaves {ROOM_FIVE.eaveHeight.toFixed(1)} m / ridge {ROOM_FIVE.ridgeHeight.toFixed(1)} m · estimates</p>}
+      {room.includes('CANAL') && <p>Ceiling {ROOM_THREE.ceilingHeight.toFixed(1)} m · photo estimate</p>}
     </section>
     {started && <>
       <div className="tour-reticle" aria-hidden="true" />
@@ -169,7 +171,7 @@ export default function VenueTour() {
       <h2>Walk the space.<br />At human scale.</h2>
       <p>Tour Hoxton Docks from a {TOUR.eyeHeight.toFixed(2)} m eye level, with life-size rooms and warehouse-height ceilings. Walk at {TOUR.walkSpeed} m/s through the traced doorways.</p>
       <button onClick={begin}>Enter the venue →</button>
-      <p className="tour-entry-note">{touch ? 'Touch arrows to walk. Drag to look.' : 'WASD or arrow keys to walk. Mouse to look. Esc releases the mouse.'} Rooms 1, 2 and 5 include photo-informed geometry and finishes; unmeasured dimensions remain estimates.</p>
+      <p className="tour-entry-note">{touch ? 'Touch arrows to walk. Drag to look.' : 'WASD or arrow keys to walk. Mouse to look. Esc releases the mouse.'} Rooms 1, 2, 3, 5 and 11 include photo-informed details. Rooms 4, 7, 8 (WC) and 10 are locked. Unmeasured dimensions remain estimates.</p>
     </section></div>}
   </main>;
 }

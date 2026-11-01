@@ -53,7 +53,7 @@ function Gable({ u }: { u: number }) {
     g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 5, 0, 2.5, 3], 2)); g.computeVertexNormals(); return g;
   }, [u]);
   useEffect(() => () => geometry.dispose(), [geometry]);
-  return <mesh geometry={geometry}><meshStandardMaterial color="#ffffff" map={u === 0 ? texture : undefined} side={THREE.DoubleSide} roughness={1} /></mesh>;
+  return <mesh geometry={geometry}><meshStandardMaterial map={texture} side={THREE.DoubleSide} roughness={1} /></mesh>;
 }
 function Truss({ u }: { u: number }) {
   const p = (v: number, y: number) => atriumPoint(u, v, y);
@@ -135,7 +135,7 @@ export function RoomFiveAtrium({ roof = true, furniture = true }: { roof?: boole
     </group>
     {[0.1, 0.3, 0.5, 0.72, 0.9].flatMap((u, i) => [0.015, 0.985].map((v) => <group key={`${u}-${v}`} position={atriumPoint(u, v, EAVE - 0.65)}>
       <mesh><boxGeometry args={[0.08, 0.13, 0.07]} /><meshStandardMaterial color="#242c30" /></mesh>
-      <pointLight position={[0, -0.12, v < 0.5 ? 0.12 : -0.12]} color={i % 2 ? '#66aaff' : '#b17bf1'} intensity={0.6} distance={2.5} />
+      <mesh position={[0, -0.08, v < 0.5 ? 0.06 : -0.06]}><sphereGeometry args={[0.035, 6, 4]} /><meshStandardMaterial color={i % 2 ? '#66aaff' : '#b17bf1'} emissive={i % 2 ? '#66aaff' : '#b17bf1'} emissiveIntensity={1.2} /></mesh>
     </group>))}
     <StandingBanner u={0.04} v={0.61} astra /><StandingBanner u={0.35} v={0.91} /><StandingBanner u={0.78} v={0.07} />
     {furniture && <FurnitureCollection items={ROOM_FIVE_FURNITURE} />}
