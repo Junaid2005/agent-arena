@@ -3,5 +3,5 @@
   "buildCommand": "npm run build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "npm ci --ignore-scripts",
-  "env": { "NEXT_PUBLIC_SERVER_URL": "https://ghost-arena.162.19.137.169.sslip.io" }
+  "regions": ["iad1"]
 }

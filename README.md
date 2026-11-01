@@ -3,9 +3,9 @@
 Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchange hackathon venue.
 
 **Play:** https://ghost-arena-theta.vercel.app
-**Server health:** https://ghost-arena.162.19.137.169.sslip.io/health
+**Server health:** https://ghost-arena-theta.vercel.app/api/health
 
-Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Three hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; restarting the server resets its in-memory state.
+Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Three hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; Vercel instances recover shared state from Redis.
 
 ## Codex buddies
 
@@ -46,7 +46,7 @@ Mobile: left joystick to move, drag the right half to aim, hold FIRE to shoot. J
 
 ## Architecture
 
-Next.js App Router, React Three Fiber/Three.js, Drei, Rapier and Zustand. The persistent Node/Socket.IO server simulates at 25 Hz. Browser clients currently use Socket.IO long polling for reliable connectivity; the server also supports WSS, which is exercised by the network test. Clients send sequenced inputs, predict movement using the shared simulation and reconcile acknowledged inputs; remote avatars interpolate. The server owns positions, movement bounds, collisions, hitscan, fire cooldown, health, scores and knockdown state. Player resume tokens stay in sessionStorage. There are no accounts or databases.
+Next.js App Router, React Three Fiber/Three.js, Drei, Rapier and Zustand. Production uses native WebSockets on Vercel Functions with Upstash Redis checkpoints, pub/sub and a fenced leader lease. One Node instance simulates at approximately 25 Hz; other instances relay inputs and snapshots. Connections recycle before the function duration limit and automatically resume. Local development retains the standalone Socket.IO server. Clients send sequenced inputs, predict movement using the shared simulation and reconcile acknowledged inputs; remote avatars interpolate. The server owns positions, movement bounds, collisions, hitscan, fire cooldown, health, scores and knockdown state. Player resume tokens stay in sessionStorage. There are no accounts; Redis stores temporary arena state.
 
 The default humanoid has articulated joints and cosmetic wobble, stride, dive, stumble, recoil and elimination collapse. This is **not a fully simulated ragdoll**. The client has a stable Rapier capsule and static colliders. Authoritative movement uses shared kinematic collision rules. Hitscan uses authoritative boxes, with conservative ramp bounding boxes.
 
@@ -74,19 +74,18 @@ Vercel is connected to `Junaid2005/codex-paintabll` through its GitHub app, with
 
 `.github/workflows/ci.yml` runs type checking, simulation/combat tests and a production build on pushes and pull requests. Vercel’s native build and this CI check run independently; branch protection can require the CI check before merging. Fork deployment authorization remains managed by Vercel.
 
-The persistent multiplayer server is deployed separately. A Vercel frontend deployment does not update server-side gameplay changes on the VPS.
+Production game routes and frontend deploy together. CI also exercises two separate WebSocket servers against Redis, including owner retirement and eight clients.
 
 ## Deployment
 
-The frontend runs on Vercel; the authoritative server runs as an isolated Docker container on the configured VPS. The deployed Next.js dependency is 16.4.3. The public frontend origin must exactly match `CORS_ORIGIN` on the server.
+The frontend and authoritative multiplayer run on Vercel in `iad1`, alongside the Upstash Redis region. Link the Upstash free integration to Production and Preview; keep automatic paid upgrades disabled. Set server-only `REDIS_URL` (or `KV_URL`) to its TLS Redis URL. Leave `NEXT_PUBLIC_SERVER_URL` unset in production to use same-origin `/api/arena` WebSockets. Health is `/api/health`.
 
 ```sh
-vercel deploy --prod --yes \
-  --build-env NEXT_PUBLIC_SERVER_URL=https://ghost-arena.162.19.137.169.sslip.io
+vercel deploy --prod --yes
 ```
 
-`scripts/deploy-server.sh` uploads only source/manifests and builds `ghost-arena-server:latest`. On the VPS, `~/ghost-arena/server.env` supplies `PORT=3011` and allowed origins. `scripts/start-production.sh` starts the container on `127.0.0.1:3011`, with a restart policy, read-only filesystem and CPU/memory limits. Caddy supplies HTTPS/WSS. Updating the server restarts in-memory gameplay.
+Vercel Functions support WebSockets but do not provide persistent shared memory. The Redis lease prevents two active simulations; fenced checkpoints preserve private player tokens and scores across instance changes. Preview state is isolated by branch; production deployments share state. Temporary disconnects reserve identities for 30 seconds. Idle arena checkpoints expire after 12 hours. Free Redis quotas limit sustained traffic; this MVP still needs longer production soak/load testing.
 
-`scripts/ensure-proxy.py` adds only the GHOST ARENA hostname through Caddy’s local admin API. A user cron job restores this route within one minute of a Caddy reload or reboot; other hosted routes are retained. The demo relies on sslip.io DNS. An owned domain and a permanent Caddyfile entry are preferable after the hackathon. No paid hosting purchase was made.
+For local distributed testing, run Redis on port 6387 and `npm run test:distributed`. `TEST_VERCEL_URL=https://your-deployment TEST_MVP_SMOKE=1 npm run test:vercel` performs the short two-client production smoke test. Omit the smoke flag for the longer combat fixture on an empty test arena. Protected deployments can supply server-side `TEST_VERCEL_BYPASS`.
 
-Do not commit `.env` files, API keys, generated deployment credentials or source video. The status file records completed checks and remaining gaps.
+Legacy VPS deployment scripts remain for reference; production no longer requires that host after cutover. Do not commit `.env` files, API keys, generated deployment credentials or source video. The status file records completed checks and remaining gaps.

@@ -16,6 +16,16 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6387:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,7 +38,7 @@ jobs:
         run: npm run typecheck
       - name: Test simulation and combat
         run: npm test
+      - name: Test shared multiplayer and instance turnover
+        run: npm run test:distributed
       - name: Build production frontend
         run: npm run build
-        env:
-          NEXT_PUBLIC_SERVER_URL: https://ghost-arena.162.19.137.169.sslip.io
