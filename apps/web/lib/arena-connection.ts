@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import type { Input, Shot, Snapshot } from '../../../packages/shared/src/types';
-import type { JoinReply, JoinRequest } from '../../../packages/shared/src/protocol';
+import type { JoinReply, JoinRequest, ServerEvents } from '../../../packages/shared/src/protocol';
 import type { ServerPacket } from '../../../packages/shared/src/websocket';
 
 export interface ArenaConnection {
@@ -15,6 +15,8 @@ interface Handlers {
   disconnected(): void;
   error(message: string): void;
   replaced(): void;
+  commentaryAudio?: ServerEvents['commentaryAudio'];
+  commentaryText?: ServerEvents['commentaryText'];
 }
 export function connectArena(serverUrl: string, handlers: Handlers): ArenaConnection {
   // Keep the existing standalone development server usable; production uses same-origin WSS.
@@ -35,6 +37,8 @@ export function connectArena(serverUrl: string, handlers: Handlers): ArenaConnec
     });
     socket.on('snapshot', handlers.snapshot);
     socket.on('shot', handlers.shot);
+    if (handlers.commentaryAudio) socket.on('commentaryAudio', handlers.commentaryAudio);
+    if (handlers.commentaryText) socket.on('commentaryText', handlers.commentaryText);
     socket.on('disconnect', handlers.disconnected);
     socket.on('connect_error', () => handlers.error('Cannot reach the arena. Reconnecting…'));
     return {

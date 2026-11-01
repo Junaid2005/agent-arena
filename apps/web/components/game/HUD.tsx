@@ -6,6 +6,7 @@ import {
   Crosshair,
   LogOut,
   Maximize,
+  Radio,
   Trophy,
   Users,
   Volume2,
@@ -13,9 +14,11 @@ import {
   X,
 } from 'lucide-react';
 import { useGame, runtime } from '../../lib/store';
+import { WeaponHUD } from './WeaponHUD';
 import { MobileControls } from './MobileControls';
 import { GhostMark } from '../lobby/Lobby';
-import { PETS } from '../../../../packages/shared/src/pets';
+import { WEAPONS, isWeaponId } from '../../../../packages/shared/src/weapons';
+import { PETS, isPetId } from '../../../../packages/shared/src/pets';
 export function HUD() {
   const s = useGame(),
     [now, setNow] = useState(Date.now()),
@@ -49,7 +52,9 @@ export function HUD() {
     me = snap?.players.find((p) => p.id === s.id),
     remaining = Math.max(0, Math.ceil(((snap?.endsAt || now) - now) / 1000)),
     dead = me?.hp === 0,
-    finished = false;
+    finished = false,
+    captionLive =
+      s.casterOn && !!s.caption.text && Date.now() - s.caption.at < 6000;
   const sorted = [...(snap?.players || [])].sort(
     (a, b) => b.score - a.score || a.deaths - b.deaths,
   );
@@ -93,6 +98,10 @@ export function HUD() {
           <button onClick={s.toggleMute}>
             {s.muted ? <VolumeX size={16} /> : <Volume2 size={16} />} {s.muted ? 'Unmute' : 'Mute'}
           </button>
+          <button onClick={s.toggleCaster}>
+            <Radio size={16} />
+            Commentary {s.casterOn ? 'on' : 'off'}
+          </button>
           <button onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})}>
             <Maximize size={16} />
             Fullscreen
@@ -118,10 +127,20 @@ export function HUD() {
             <div key={f.id}>
               <b style={{ color: f.color }}>{f.killer}</b>
               <Crosshair size={13} />
+              {isWeaponId(f.weapon) && <small style={{ color: WEAPONS[f.weapon].color }}>{WEAPONS[f.weapon].label}</small>}
               <span>{f.victim}</span>
             </div>
           ))}
       </div>
+      {captionLive && (
+        <div className="caster-caption" aria-live="polite">
+          <span className="caster-tag">
+            <i />
+            LIVE CAST
+          </span>
+          <p>{s.caption.text}</p>
+        </div>
+      )}
       <div className="status-toast">
         {s.status === 'reconnecting' ? (
           <span className="reconnecting">
@@ -144,11 +163,11 @@ export function HUD() {
       <div className="hud-bottom">
         <div className="player-status">
           <div className="player-avatar">
-            <GhostMark />
+            <span className="pet-preview" style={{ backgroundImage: `url(${PETS[isPetId(me?.pet) ? me.pet : s.selectedPet].sprite})` }} />
           </div>
           <div>
             <span className="callsign">{me?.name || 'ROOKIE'}</span>
-            <small className="buddy-readout">BUDDY · {me?.pet && me.pet in PETS ? PETS[me.pet].name.toUpperCase() : 'CODEX'}</small>
+            <small className="character-readout">PLAYING AS {PETS[isPetId(me?.pet) ? me.pet : s.selectedPet].name.toUpperCase()}</small>
             <div className="health-pips">
               {[1, 2, 3].map((n) => (
                 <i key={n} className={(me?.hp || 0) >= n ? 'full' : ''} />
@@ -177,16 +196,9 @@ export function HUD() {
             <kbd>TAB</kbd>SCORES
           </button>
         </div>
-        <div className="ammo">
-          <img className="marker-icon" src="/characters/marker.png" alt="" />
-          <strong>∞</strong>
-          <span>
-            PAINT
-            <br />
-            REPEAT
-          </span>
-        </div>
+
       </div>
+      <WeaponHUD />
       <MobileControls />
       {performance.now() - s.hurtAt < 260 && <div className="damage-vignette" />}
       {dead && (

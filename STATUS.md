@@ -12,6 +12,7 @@ Game health: https://ghost-arena-theta.vercel.app/api/health
 - [x] M6: Venue reconstructed manually from the supplied floor plan and video, primitive collisions, stage ramp, room labels, furniture, brick, windows and trusses; optional GLB overlay
 - [x] M7: Responsive lobby/HUD and PUBG-style touch movement, right-side aiming, dedicated fire/jump/dive buttons
 - [x] M8 deployment: Vercel frontend and native WebSocket game routes; shared Upstash Redis state, health endpoint and automatic reconnection.
+- Live commentary remains available on the standalone server; Vercel commentary integration is deferred.
 
 ## Verification
 
@@ -58,8 +59,9 @@ Merge the Vercel migration PR to preserve this setup on future Git deployments. 
 
 - Upstash free Redis linked to production and previews, automatic paid upgrades disabled; secrets remain server-side.
 - Native WSS `/api/arena`, Redis leader fencing, private checkpoints, cross-instance input/snapshot relay and reconnect identity. Production and Redis run in `iad1`.
-- Type checking, 12 unit tests, two-instance/eight-client Redis integration and production build passed locally. Dependency audit: zero vulnerabilities.
+- Type checking, 47 unit tests, two-instance/eight-client Redis integration and production build passed locally. Dependency audit: zero vulnerabilities.
 - Actual Vercel candidate and public production URL both passed the short two-client smoke: health, shared movement, manual shots and reconnect identity.
 - Candidate `dpl_6EGuxyKoe24AqLrRiieEwwmwgePD` promoted to the public URL. Website and game health return HTTP 200.
 - Full production combat/load/long-duration testing deferred at the user's request. No two-human physical-device test claimed.
 - Retired the VPS game container, its proxy-restoration cron and its Caddy route; unrelated services were left running.
+- Integrated teammate pet-character and random-gun changes; updated distributed combat fixture passes. Vercel uses a new state namespace for the weapon protocol; existing sessions should reload after cutover.

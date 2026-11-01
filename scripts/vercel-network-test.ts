@@ -163,7 +163,13 @@ try {
     await bob.move(-4, 8.7);
     await bob.move(11, 8.7);
     await bob.move(11.65, 10);
-    await wait(() => alice.me!.deaths + bob.me!.deaths > 0, 'combat did not synchronize', 8_000);
+    const deadline = Date.now() + 8000;
+    while (bob.me!.deaths === 0 && Date.now() < deadline) {
+      alice.input({ fire: true, yaw: 0, pitch: 0 });
+      await pause(40);
+    }
+    alice.input();
+    await wait(() => bob.me!.deaths > 0, 'combat did not synchronize', 8_000);
     const victim = alice.me!.deaths ? alice : bob;
     assert.ok(alice.shots.some((s) => s.hit === victim.identity!.id && s.killed));
     assert.equal(alice.state!.feed[0].id, bob.state!.feed[0].id);

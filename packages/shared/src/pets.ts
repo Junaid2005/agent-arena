@@ -1,4 +1,5 @@
 const PET_ASSET_ROOT = 'https://cdn.openai.com/c6d7b0d0-3abf-40b5-9d0c-ecd2b9364692';
+export const PET_SHEET = { columns: 8, rows: 9 } as const;
 export const PETS = {
   codex: { name: 'Codex', role: 'Balanced co-pilot', color: '#b9fa44', sprite: `${PET_ASSET_ROOT}/codex-spritesheet-v4.webp` },
   dewey: { name: 'Dewey', role: 'Calm cover fire', color: '#8ed4ff', sprite: `${PET_ASSET_ROOT}/dewey-spritesheet-v4.webp` },
@@ -13,4 +14,4 @@ export const PETS = {
 
 export type PetId = keyof typeof PETS;
 export const isPetId = (value: unknown): value is PetId =>
-  typeof value === 'string' && value in PETS;
+  typeof value === 'string' && Object.hasOwn(PETS, value);

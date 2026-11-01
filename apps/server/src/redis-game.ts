@@ -57,6 +57,7 @@ function freshRoom(): Room {
     feed: [],
     finishedAt: 0,
     createdAt: Date.now(),
+    projectiles: [],
   };
 }
 export function redisUrl() {
@@ -68,7 +69,7 @@ export function statePrefix() {
   if (process.env.GHOST_STATE_PREFIX) return process.env.GHOST_STATE_PREFIX;
   const env = process.env.VERCEL_ENV || 'development';
   const branch = env === 'preview' ? `:${process.env.VERCEL_GIT_COMMIT_REF || 'preview'}` : '';
-  return `ghost-arena:v1:${env}${branch}`;
+  return `ghost-arena:v2:${env}${branch}`;
 }
 function client(url: string) {
   return new Redis(url, {
@@ -279,7 +280,14 @@ export class RedisGame {
           const saved = await this.redis.get(this.stateKey);
           if (saved) {
             const parsed = JSON.parse(saved) as SavedRoom;
-            this.room = { ...parsed, members: new Map(parsed.members) };
+            this.room = {
+              ...parsed,
+              projectiles: parsed.projectiles || [],
+              members: new Map(parsed.members),
+            };
+            for (const member of this.room.members.values()) {
+              if (!member.player.weapon) member.player.weapon = 'pistol';
+            }
           }
           this.leader = true;
         }
@@ -324,7 +332,6 @@ export class RedisGame {
               input: idleInput(),
               lastInputAt: now,
               lastShot: 0,
-              lastPetShot: 0,
               lastReceivedSeq: -1,
               rateStart: now,
               rateCount: 0,

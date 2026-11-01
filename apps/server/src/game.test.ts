@@ -4,21 +4,19 @@ import { movePlayer } from '../../../packages/shared/src/movement.ts';
 import { ARENA, DT, MATCH_MS, SPAWNS } from '../../../packages/shared/src/constants.ts';
 import { newPlayer } from './players.ts';
 import { idleInput, createRoom, rooms, type Member } from './rooms.ts';
-import { petShoot, shoot, rayBox } from './combat.ts';
+import { shoot, rayBox } from './combat.ts';
 import { simulate } from './simulation.ts';
 import { validateInput } from './validation.ts';
 const time = 10000;
 function member(index = 0): Member {
   return {
-    player: newPlayer(String(index), 'Player ' + index, index, time),
+    player: { ...newPlayer(String(index), 'Player ' + index, index, time), weapon: 'pistol' },
     token: 'token' + index,
     socketId: 'socket' + index,
     disconnectedAt: 0,
     input: idleInput(),
     lastInputAt: time,
     lastShot: 0,
-    // Keep companion fire on cooldown in fixtures that isolate player shooting.
-    lastPetShot: time,
     lastReceivedSeq: -1,
     rateStart: time,
     rateCount: 0,
@@ -78,7 +76,7 @@ test('three server ray hits eliminate, award one score, then respawn after three
   a.player.protectedUntil = 0;
   b.player.protectedUntil = 0;
   a.input = { ...idleInput(), fire: true };
-  for (const t of [time, time + 200, time + 400]) {
+  for (const t of [time, time + 300, time + 600]) {
     a.lastInputAt = t;
     simulate(r, t);
   }
@@ -86,12 +84,12 @@ test('three server ray hits eliminate, award one score, then respawn after three
   assert.equal(a.player.score, 1);
   assert.equal(b.player.deaths, 1);
   assert.equal(r.feed.length, 1);
-  assert.equal(b.player.respawnAt, time + 3400);
-  simulate(r, time + 3399);
+  assert.equal(b.player.respawnAt, time + 3600);
+  simulate(r, time + 3599);
   assert.equal(b.player.hp, 0);
-  simulate(r, time + 3400);
+  simulate(r, time + 3600);
   assert.equal(b.player.hp, 3);
-  assert.ok(b.player.protectedUntil > time + 3400);
+  assert.ok(b.player.protectedUntil > time + 3600);
   rooms.delete(r.code);
 });
 test('walls occlude hits and cooldown blocks excessive shooting', () => {
@@ -111,21 +109,19 @@ test('walls occlude hits and cooldown blocks excessive shooting', () => {
     null,
   );
 });
-test('a selected pet assists only at a capped server-authoritative cadence', () => {
-  const owner = newPlayer('owner', 'Owner', 0, time), enemy = newPlayer('enemy', 'Enemy', 1, time);
-  owner.position = { x: 11, y: 0, z: 12 };
-  enemy.position = { x: 11.65, y: 0, z: 10 };
-  owner.protectedUntil = 0;
-  enemy.protectedUntil = 0;
-  owner.pet = 'codex';
-  const first = petShoot(owner, [owner, enemy], time, 0);
-  assert.ok(first?.pet === 'codex');
-  assert.equal(petShoot(owner, [owner, enemy], time + 400, time), null);
-  const second = petShoot(owner, [owner, enemy], time + 1800, time);
-  const third = petShoot(owner, [owner, enemy], time + 3600, time + 1800);
-  assert.ok(second?.hit);
-  assert.ok(third?.killed);
-  assert.equal(owner.score, 1);
+test('pet characters do not shoot without player input', () => {
+  const r = createRoom(time), a = member(), b = member(1);
+  a.player.pet = 'fireball';
+  b.player.pet = 'dewey';
+  a.player.position = { x: 11, y: 0, z: 12 };
+  b.player.position = { x: 11.65, y: 0, z: 10 };
+  a.player.protectedUntil = b.player.protectedUntil = 0;
+  r.members.set('0', a);
+  r.members.set('1', b);
+  for (let i = 0; i < 100; i++) assert.deepEqual(simulate(r, time + i * 40), []);
+  assert.equal(a.player.hp, 3);
+  assert.equal(b.player.hp, 3);
+  rooms.delete(r.code);
 });
 test('arena runs continuously without resetting scores; disconnect cleanup removes abandoned players', () => {
   const r = createRoom(time),

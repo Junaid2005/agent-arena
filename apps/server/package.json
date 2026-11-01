@@ -3,14 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file-if-exists=.env.local src/index.ts",
     "start": "tsx src/index.ts",
     "start:vercel": "tsx src/vercel-local.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.900.0",
-    "ioredis": "^5.8.2",
     "socket.io": "^4.8.0",
-    "ws": "^8.18.3"
+    "ws": "^8.21.3",
+    "ioredis": "^5.8.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2"
   }
 }

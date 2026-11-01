@@ -2,18 +2,19 @@
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, Crosshair, LoaderCircle } from 'lucide-react';
 import { useGame, unlockAudio } from '../../lib/store';
-import { PETS, type PetId } from '../../../../packages/shared/src/pets';
+import { PETS, isPetId, type PetId } from '../../../../packages/shared/src/pets';
 export function Lobby() {
   const [name, setName] = useState('');
-  const [pet, setPet] = useState<PetId>('codex');
+  const pet = useGame((s) => s.selectedPet);
+  const setPet = useGame((s) => s.selectPet);
   const status = useGame((s) => s.status),
     error = useGame((s) => s.error),
     join = useGame((s) => s.join);
   useEffect(() => {
     setName(localStorage.getItem('ghost:name') || '');
     const savedPet = localStorage.getItem('ghost:pet');
-    if (savedPet && savedPet in PETS) setPet(savedPet as PetId);
-  }, []);
+    if (isPetId(savedPet)) setPet(savedPet);
+  }, [setPet]);
   const enter = () => {
     unlockAudio();
     localStorage.setItem('ghost:name', name.trim());
@@ -48,7 +49,7 @@ export function Lobby() {
         <p className="hero-copy">
           The paint never dries. The game never stops.
           <br />
-          Pick a name. Everyone’s already in there.
+          Pick a pet. Get a gun. Every kill shuffles it.
         </p>
         <form
           className="join-card"
@@ -73,7 +74,7 @@ export function Lobby() {
             <Crosshair size={20} />
           </div>
           <fieldset className="pet-picker">
-            <legend>CHOOSE YOUR CODEX BUDDY</legend>
+            <legend>CHOOSE YOUR CHARACTER</legend>
             <div className="pet-grid">
               {(Object.entries(PETS) as [PetId, (typeof PETS)[PetId]][]).map(([id, item]) => (
                 <button
@@ -85,7 +86,7 @@ export function Lobby() {
                 >
                   <span className="pet-preview" style={{ backgroundImage: `url(${item.sprite})` }} />
                   <strong>{item.name}</strong>
-                  <small>{item.role}</small>
+                  <small>{pet === id ? 'SELECTED' : 'PLAY AS ' + item.name.toUpperCase()}</small>
                 </button>
               ))}
             </div>
@@ -110,7 +111,7 @@ export function Lobby() {
           </button>
         </form>
       </section>
-      <div className="runner-poster" aria-hidden="true" />
+      <div className="pet-poster" aria-hidden="true" style={{ backgroundImage: `url(${PETS[pet].sprite})` }} />
       <div className="arena-caption">
         <span className="live-label">
           <i />

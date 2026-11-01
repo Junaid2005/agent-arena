@@ -139,12 +139,13 @@ test(
       await bob.navigate(-4, 8.7);
       await bob.navigate(11, 8.7);
       await bob.navigate(11.65, 10);
-      // The default companions also shoot. Verify whichever player they eliminate first,
-      // rather than assuming navigation leaves both players untouched.
-      await until(
-        () => alice.me!.deaths + bob.me!.deaths > 0,
-        'combat did not eliminate either player',
-      );
+      const deadline = Date.now() + 8000;
+      while (bob.me!.deaths === 0 && Date.now() < deadline) {
+        alice.input({ fire: true, yaw: 0, pitch: 0 });
+        await delay(40);
+      }
+      alice.input();
+      await until(() => bob.me!.deaths > 0, 'player firing did not eliminate target');
       const victim = alice.me!.deaths ? alice : bob;
       const killer = victim === alice ? bob : alice;
       assert.ok(killer.me!.score > 0);
