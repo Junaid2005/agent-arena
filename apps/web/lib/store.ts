@@ -4,9 +4,8 @@ export { unlockAudio } from './audio';
 import { connectArena, type ArenaConnection } from './arena-connection';
 import type { Input, Player, Shot, Snapshot } from '../../../packages/shared/src/types';
 import { movePlayer } from '../../../packages/shared/src/movement';
-import { shoot, explode } from '../../../packages/shared/src/combat';
-import { WEAPONS, isWeaponId, rollWeapon } from '../../../packages/shared/src/weapons';
-import { DT, MATCH_MS } from '../../../packages/shared/src/constants';
+import { WEAPONS, isWeaponId } from '../../../packages/shared/src/weapons';
+import { DT } from '../../../packages/shared/src/constants';
 import { isPetId, type PetId } from '../../../packages/shared/src/pets';
 import { CommentaryPlayer } from './commentary';
 
@@ -25,8 +24,7 @@ export const runtime: {
   pending: Input[];
   seq: number;
   clockOffset: number;
-  lastShot: number;
-} = { local: null, pending: [], seq: 0, clockOffset: 0, lastShot: 0 };
+} = { local: null, pending: [], seq: 0, clockOffset: 0 };
 export const serverUrl =
   process.env.NEXT_PUBLIC_SERVER_URL ||
   (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001');
@@ -37,7 +35,7 @@ let identity: { name: string; room?: string; token?: string; pet: PetId } | null
 const clone = (p: Player): Player => ({ ...p, position: { ...p.position } });
 interface State {
   screen: 'lobby' | 'game';
-  status: 'idle' | 'connecting' | 'online' | 'reconnecting' | 'practice';
+  status: 'idle' | 'connecting' | 'online' | 'reconnecting';
   error: string;
   id: string;
   room: string;
@@ -52,7 +50,6 @@ interface State {
   selectedPet: PetId;
   selectPet: (pet: PetId) => void;
   join: (name: string, pet: PetId) => void;
-  practice: (name: string, pet?: PetId) => void;
   leave: () => void;
   toggleMute: () => void;
   toggleCaster: () => void;
@@ -191,59 +188,6 @@ export const useGame = create<State>((set, get) => ({
     });
     startLoop();
   },
-  practice: (name, pet = get().selectedPet) => {
-    ++connectionVersion;
-    socket?.disconnect();
-    if (timer) clearInterval(timer);
-    commentaryPlayer?.stopAll();
-    const now = Date.now();
-    const p: Player = {
-      id: 'practice',
-      name: name || 'Rookie',
-      color: '#b9fa44',
-      position: { x: 0, y: 0, z: 10 },
-      vy: 0,
-      yaw: 0,
-      pitch: 0,
-      hp: 3,
-      score: 0,
-      deaths: 0,
-      seq: -1,
-      moving: false,
-      grounded: true,
-      knockUntil: 0,
-      diveUntil: 0,
-      respawnAt: 0,
-      protectedUntil: 0,
-      pet,
-      weapon: rollWeapon(),
-    };
-    runtime.local = p;
-    runtime.pending = [];
-    runtime.clockOffset = 0;
-    controls.yaw = 0;
-    controls.pitch = -0.08;
-    set({
-      screen: 'game',
-      status: 'practice',
-      id: p.id,
-      room: 'PRACTICE',
-      shots: [],
-      weaponChangedAt: 0,
-      snapshot: {
-        room: 'PRACTICE',
-        players: [p],
-        time: now,
-        endsAt: now + MATCH_MS,
-        round: 1,
-        phase: 'playing',
-        feed: [],
-      },
-      error: '',
-      caption: { text: '', at: 0 },
-    });
-    startLoop();
-  },
   leave: () => {
     ++connectionVersion;
     set({
@@ -291,12 +235,11 @@ function receiveShot(shot: Shot) {
 }
 function startLoop() {
   let stride = 0;
-  let projectiles: Shot[] = [];
   if (timer) clearInterval(timer);
   timer = setInterval(() => {
     const s = useGame.getState(),
       p = runtime.local;
-    if (!p || (s.status !== 'online' && s.status !== 'practice')) return;
+    if (!p || s.status !== 'online') return;
     const input: Input = { seq: ++runtime.seq, ...controls };
     const before = {
       x: p.position.x,
@@ -322,27 +265,9 @@ function startLoop() {
         }
       } else stride = 0;
     } else stride = 0;
-    if (s.status === 'online') {
-      runtime.pending.push(input);
-      runtime.pending = runtime.pending.slice(-60);
-      socket?.sendInput(input);
-    } else {
-      const now = Date.now();
-      projectiles = projectiles.filter((flight) => {
-        if (now < flight.at + (flight.travelMs || 0)) return true;
-        receiveShot(explode(flight, p, [], now));
-        return false;
-      });
-      if (input.fire) {
-        const shot = shoot(p, [], now, runtime.lastShot);
-        if (shot) {
-          runtime.lastShot = now;
-          receiveShot(shot);
-          if (shot.travelMs) projectiles.push(shot);
-        }
-      }
-      useGame.setState({ snapshot: { ...s.snapshot!, players: [clone(p)], time: now } });
-    }
+    runtime.pending.push(input);
+    runtime.pending = runtime.pending.slice(-60);
+    socket?.sendInput(input);
     controls.jump = false;
     controls.dive = false;
     controls.stumble = false;

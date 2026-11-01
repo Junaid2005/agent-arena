@@ -1,12 +1,12 @@
 'use client';
-import { Suspense, useMemo, useRef } from 'react';
+import { Suspense, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Physics } from '@react-three/rapier';
-import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { ARENA } from '../../../../packages/shared/src/constants';
-import type { Player, Shot } from '../../../../packages/shared/src/types';
+import type { Player } from '../../../../packages/shared/src/types';
 import { controls, runtime, useGame } from '../../lib/store';
+import { ShotEffect } from './ShotEffect';
 import { Arena } from './Arena';
 import { Character } from '../avatar/Character';
 import { PETS } from '../../../../packages/shared/src/pets';
@@ -153,48 +153,4 @@ function CameraRig() {
     camera.lookAt(target.current.clone().addScaledVector(direction, 40));
   });
   return null;
-}
-function ShotEffect({ shot }: { shot: Shot }) {
-  const trail = useRef<THREE.Group>(null), burst = useRef<THREE.Group>(null), projectile = useRef<THREE.Group>(null);
-  const from = useMemo(() => new THREE.Vector3(shot.from.x, shot.from.y, shot.from.z), [shot]);
-  const to = useMemo(() => new THREE.Vector3(shot.to.x, shot.to.y, shot.to.z), [shot]);
-  const rocket = !!shot.travelMs, cloud = shot.weapon === 'fart', laser = shot.weapon === 'laser';
-  const colours = ['#ff70ad', '#ffe35e', '#65fff2', '#df9dff', '#b9fa44'];
-  useFrame(() => {
-    const age = Date.now() + runtime.clockOffset - shot.at;
-    if (trail.current) trail.current.visible = !shot.impact && !rocket && age >= 0 && age < (laser ? 160 : 100);
-    if (projectile.current) {
-      projectile.current.visible = rocket && age >= 0 && age < shot.travelMs!;
-      projectile.current.position.copy(from).lerp(to, Math.max(0, Math.min(1, age / (shot.travelMs || 1))));
-      projectile.current.lookAt(to);
-    }
-    if (burst.current) {
-      burst.current.visible = !rocket && age >= 0 && age < (cloud ? 550 : 650);
-      burst.current.scale.setScalar(shot.impact ? Math.max(0.1, Math.min(1, age / 300)) : cloud ? 0.4 + Math.min(age, 550) / 500 : 1 + Math.min(age, 650) / 250);
-    }
-  });
-  return (
-    <group>
-      <group ref={trail} visible={false}>
-        {!cloud && (shot.trails?.length ? shot.trails : [shot.to]).map((end, i) => (
-          <Line key={i} points={[from, new THREE.Vector3(end.x, end.y, end.z)]}
-            color={shot.weapon === 'confetti' ? colours[i % colours.length] : shot.color}
-            lineWidth={laser ? 4 : shot.weapon === 'sniper' ? 3 : 1.5} />
-        ))}
-      </group>
-      {rocket && <group ref={projectile} position={from} visible={false}>
-        <mesh scale={[0.11, 0.11, 0.35]}><sphereGeometry args={[1, 8, 6]} /><meshBasicMaterial color="#ffe35e" /></mesh>
-        <pointLight color={shot.color} intensity={2} distance={3} />
-      </group>}
-      <group ref={burst} position={cloud ? from.clone().lerp(to, 0.5) : to} visible={false}>
-        {Array.from({ length: cloud ? 9 : 7 }, (_, i) => (
-          <mesh key={i} position={[Math.sin(i * 5.1) * (cloud ? 0.8 : 0.12), Math.cos(i * 3.8) * (cloud ? 0.5 : 0.12), Math.sin(i * 2.3) * (cloud ? 0.8 : 0.12)]}>
-            {shot.weapon === 'confetti' ? <boxGeometry args={[0.07, 0.03, 0.05]} /> : <sphereGeometry args={[cloud ? 0.55 : shot.impact ? 0.22 : 0.045, 7, 6]} />}
-            <meshBasicMaterial color={shot.weapon === 'confetti' ? colours[i % colours.length] : shot.color} transparent opacity={cloud ? 0.18 : 0.8} depthWrite={false} />
-          </mesh>
-        ))}
-        {shot.impact && <mesh><sphereGeometry args={[shot.blastRadius || 4, 16, 12]} /><meshBasicMaterial color={shot.color} transparent opacity={0.12} wireframe depthWrite={false} /></mesh>}
-      </group>
-    </group>
-  );
 }

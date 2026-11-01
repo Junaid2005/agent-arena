@@ -147,8 +147,6 @@ export function HUD() {
             <i />
             CONNECTION LOST · RECONNECTING…
           </span>
-        ) : s.status === 'practice' ? (
-          <span>PRACTICE MODE · NO OTHER PLAYERS</span>
         ) : snap?.players.length === 1 ? (
           <span>THE ARENA IS LIVE. INVITE FRIENDS TO THIS WEBSITE.</span>
         ) : null}

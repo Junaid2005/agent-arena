@@ -375,20 +375,6 @@ h1 .hero-asterisk {
   width: 4px;
   height: 4px;
 }
-.practice-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 17px;
-  padding: 0;
-  background: none;
-  border: 0;
-  color: #b4c2ad;
-  font-size: 9px;
-}
-.practice-link:hover {
-  color: #b9fa44;
-}
 .room-input {
   display: flex;
   align-items: center;
@@ -1209,9 +1195,6 @@ kbd {
   .play-button {
     padding: 11px 16px;
   }
-  .practice-link {
-    margin-top: 12px;
-  }
   .lobby-footer {
     height: 50px;
   }
@@ -1295,10 +1278,6 @@ kbd {
   }
   .card-foot {
     font-size: 6px;
-  }
-  .practice-link {
-    font-size: 10px;
-    margin-top: 18px;
   }
   .arena-caption {
     display: none;
@@ -1837,4 +1816,17 @@ kbd {
 @media (max-width: 1000px) { .desktop-controls { display: none; } }
 @media (pointer: coarse), (max-width: 720px) {
   .status-toast { top: 84px; left: auto; right: 14px; transform: none; width: calc(100% - 200px); }
+}
+
+.weapon-sprite { width: 64px; height: 42px; flex: 0 0 64px; color: var(--weapon-color); }
+.ammo-readout { display: flex; align-items: center; gap: 7px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #ffffff18; color: var(--weapon-color); }
+.ammo-sprite { width: 18px; height: 24px; flex: 0 0 18px; }
+.ammo-readout > span { font-size: 7px; letter-spacing: 0.6px; }
+.ammo-readout > b { font-size: 18px; margin-left: auto; }
+@media (pointer: coarse), (max-width: 720px) {
+  .weapon-sprite { width: 40px; height: 30px; flex-basis: 40px; }
+  .ammo-readout { margin-top: 0; padding-top: 4px; gap: 4px; }
+  .ammo-readout > span { font-size: 6px; letter-spacing: 0; }
+  .ammo-sprite { width: 12px; height: 17px; flex-basis: 12px; }
+  .ammo-readout > b { font-size: 14px; }
 }

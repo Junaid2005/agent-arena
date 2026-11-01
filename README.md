@@ -1,4 +1,4 @@
-# GHOST ARENA
+# AGENT ARENA
 
 Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchange hackathon venue.
 
@@ -13,9 +13,11 @@ Choose one of nine built-in Codex pets as your playable character before enterin
 
 Both frontend and server must be updated together. Older server versions ignore pet selection; the client reports a failed character load instead of silently substituting Codex.
 
+The arena requires a live server connection; there is no offline mode.
+
 ## Random gun game
 
-Everyone starts with a random weapon. Each server-confirmed elimination immediately rolls a different gun from the eight-weapon arsenal. Hits do not reroll; death, respawn and reconnect keep your current gun. Hold FIRE with any weapon; ammo is unlimited. The HUD shows the weapon, cadence, range and handling tip, and announces each kill swap.
+Everyone starts with a random weapon. Each server-confirmed elimination immediately rolls a different gun from the eight-weapon arsenal. Hits do not reroll; death, respawn and reconnect keep your current gun. Hold FIRE with any weapon; ammo is unlimited. The HUD shows a matching weapon silhouette and ammunition icon, cadence, range and handling tip, and announces each kill swap. Held guns use compact low-poly models; bullets have copper tips and distinct sizes, shotgun pellets trail colourful confetti, lasers have energy cores, rockets have fins and exhaust, and the fart cannon emits expanding gas puffs. Bullet travel effects are cosmetic; hitscan damage and rocket flight remain server-authoritative.
 
 | Weapon | How it plays |
 | --- | --- |
@@ -28,7 +30,7 @@ Everyone starts with a random weapon. Each server-confirmed elimination immediat
 | Silent But Deadly | Two-damage, 6 m forward stink cone every 650 ms |
 | Confetti Catastrophe | Seven pellets every 800 ms, each deals one damage |
 
-Rockets explode at their traced impact point after flight time, giving targets time to move. Splash and fart cones respect cover and spawn protection, can hit several opponents, and spare their shooter. Each victim earns one score and one roll. All live damage, random assignments and kill rolls are server-owned; the browser only sends controls. Practice uses the same ballistics with no opponents. The frontend and persistent server must both be deployed for this protocol update.
+Rockets explode at their traced impact point after flight time, giving targets time to move. Splash and fart cones respect cover and spawn protection, can hit several opponents, and spare their shooter. Each victim earns one score and one roll. All live damage, random assignments and kill rolls are server-owned; the browser only sends controls. The frontend and multiplayer authority must use the same weapon protocol.
 
 ## Live commentary
 

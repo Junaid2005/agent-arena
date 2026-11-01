@@ -1,6 +1,7 @@
 'use client';
 import type { CSSProperties } from 'react';
 import { WEAPONS, isWeaponId } from '../../../../packages/shared/src/weapons';
+import { WeaponSprite, AmmoReadout } from './WeaponSprite';
 import { useGame } from '../../lib/store';
 
 export function WeaponHUD() {
@@ -14,7 +15,8 @@ export function WeaponHUD() {
     <>
       <aside className="weapon-card" data-weapon={id} style={style} aria-label={`Equipped weapon: ${w.name}`}>
         <div className="weapon-kicker"><span>RANDOM ARSENAL</span><b>∞ AMMO</b></div>
-        <div className="weapon-title"><span aria-hidden="true">{w.icon}</span><div><small>{w.label}</small><strong>{w.name}</strong></div></div>
+        <div className="weapon-title"><WeaponSprite weapon={id} /><div><small>{w.label}</small><strong>{w.name}</strong></div></div>
+        <AmmoReadout weapon={id} />
         <p>{w.hint}</p>
         <div className="weapon-stats"><span>{w.damage === 3 ? 'ONE-SHOT' : `${w.damage} DMG`}{w.pellets > 1 ? ` × ${w.pellets}` : ''}</span><span>{(1000 / w.interval).toFixed(1)}/SEC</span><span>{w.range}m</span></div>
         <footer>GET A KILL <span>↗</span> GET A DIFFERENT GUN</footer>
