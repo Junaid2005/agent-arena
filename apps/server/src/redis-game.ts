@@ -510,7 +510,7 @@ export async function arenaHealth(url = redisUrl(), prefix = statePrefix()) {
     const room = saved ? (JSON.parse(saved) as SavedRoom) : null;
     return {
       ok: true,
-      service: 'ghost-arena',
+      service: 'agent-arena',
       hosting: 'vercel',
       rooms: 1,
       players:

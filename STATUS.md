@@ -1,4 +1,4 @@
-# GHOST ARENA status
+# AGENT ARENA status
 
 Public frontend: https://ghost-arena-theta.vercel.app
 Game health: https://ghost-arena-theta.vercel.app/api/health

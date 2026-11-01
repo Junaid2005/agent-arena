@@ -1,5 +1,5 @@
 {
-  "name": "ghost-arena",
+  "name": "agent-arena",
   "private": true,
   "workspaces": [
     "apps/*",
