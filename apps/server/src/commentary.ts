@@ -152,6 +152,8 @@ export class EventDetector {
     now: number,
     events: CommentaryEvent[],
   ) {
+    // A rocket launch is still in flight; evaluate aim and kills at impact.
+    if (shot.travelMs) return;
     const shooter = byId.get(shot.shooter);
     const victim = shot.hit ? byId.get(shot.hit) : undefined;
     if (shot.pet) {
@@ -183,7 +185,13 @@ export class EventDetector {
         });
       }
     }
-    if (shot.killed && shooter && victim) this.processKill(shot, shooter, victim, now, events);
+    if (shooter) {
+      const kills = shot.kills ?? (shot.killed && shot.hit ? [shot.hit] : []);
+      for (const id of kills) {
+        const killed = byId.get(id);
+        if (killed) this.processKill(shot, shooter, killed, now, events);
+      }
+    }
   }
 
   private processKill(

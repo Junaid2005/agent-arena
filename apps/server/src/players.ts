@@ -1,3 +1,4 @@
+import { rollWeapon } from '../../../packages/shared/src/weapons.ts';
 import { COLORS, SPAWNS } from '../../../packages/shared/src/constants.ts';
 import type { Player } from '../../../packages/shared/src/types.ts';
 export function newPlayer(id: string, name: string, index: number, now: number): Player {
@@ -21,6 +22,7 @@ export function newPlayer(id: string, name: string, index: number, now: number):
     respawnAt: 0,
     protectedUntil: now + 2000,
     pet: 'codex',
+    weapon: rollWeapon(),
   };
 }
 export function respawn(p: Player, players: Player[], now: number) {

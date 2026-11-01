@@ -14,8 +14,10 @@ import {
   X,
 } from 'lucide-react';
 import { useGame, runtime } from '../../lib/store';
+import { WeaponHUD } from './WeaponHUD';
 import { MobileControls } from './MobileControls';
 import { GhostMark } from '../lobby/Lobby';
+import { WEAPONS, isWeaponId } from '../../../../packages/shared/src/weapons';
 import { PETS, isPetId } from '../../../../packages/shared/src/pets';
 export function HUD() {
   const s = useGame(),
@@ -125,6 +127,7 @@ export function HUD() {
             <div key={f.id}>
               <b style={{ color: f.color }}>{f.killer}</b>
               <Crosshair size={13} />
+              {isWeaponId(f.weapon) && <small style={{ color: WEAPONS[f.weapon].color }}>{WEAPONS[f.weapon].label}</small>}
               <span>{f.victim}</span>
             </div>
           ))}
@@ -193,16 +196,9 @@ export function HUD() {
             <kbd>TAB</kbd>SCORES
           </button>
         </div>
-        <div className="ammo">
-          <img className="marker-icon" src="/characters/marker.png" alt="" />
-          <strong>∞</strong>
-          <span>
-            PAINT
-            <br />
-            REPEAT
-          </span>
-        </div>
+
       </div>
+      <WeaponHUD />
       <MobileControls />
       {performance.now() - s.hurtAt < 260 && <div className="damage-vignette" />}
       {dead && (

@@ -6,6 +6,8 @@ import { CapsuleCollider, RigidBody, type RapierRigidBody } from '@react-three/r
 import * as THREE from 'three';
 import type { Player } from '../../../../packages/shared/src/types';
 import { PETS, isPetId, PET_SHEET } from '../../../../packages/shared/src/pets';
+import { WeaponModel } from './WeaponModel';
+import { isWeaponId } from '../../../../packages/shared/src/weapons';
 import { runtime } from '../../lib/store';
 import { petFrame } from '../../lib/pet-animation';
 
@@ -27,6 +29,8 @@ export function Character({ player, local = false, lobby = false }: {
   }, [image]);
   useEffect(() => () => texture.dispose(), [texture]);
   const root = useRef<THREE.Group>(null);
+  const aim = useRef<THREE.Group>(null);
+  const pitch = useRef<THREE.Group>(null);
   const sprite = useRef<THREE.Sprite>(null);
   const rigid = useRef<RapierRigidBody>(null);
   const pos = useRef(new THREE.Vector3(player.position.x, player.position.y, player.position.z));
@@ -38,6 +42,8 @@ export function Character({ player, local = false, lobby = false }: {
     if (pos.current.distanceTo(target) > 4) pos.current.copy(target);
     else pos.current.lerp(target, 1 - Math.exp(-dt * (local ? 24 : 13)));
     root.current.position.copy(pos.current);
+    if (aim.current) { aim.current.rotation.y = p.yaw; aim.current.visible = p.hp > 0; }
+    if (pitch.current) pitch.current.rotation.x = -p.pitch;
     rigid.current?.setNextKinematicTranslation({ x: pos.current.x, y: pos.current.y + 0.85, z: pos.current.z });
     const cameraRight = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
     const facingLeft = -Math.sin(p.yaw) * cameraRight.x - Math.cos(p.yaw) * cameraRight.z < 0;
@@ -63,8 +69,9 @@ export function Character({ player, local = false, lobby = false }: {
         <sprite ref={sprite} position={[0, 0.98, 0]} scale={[1.8, 1.95, 1]}>
           <spriteMaterial map={texture} transparent alphaTest={0.08} depthWrite={false} />
         </sprite>
+        {!lobby && <group ref={aim}><group ref={pitch}><WeaponModel weapon={isWeaponId(player.weapon) ? player.weapon : 'pistol'} /></group></group>}
         {!local && !lobby && (
-          <Html center position={[0, 2.22, 0]} distanceFactor={14} style={{ pointerEvents: 'none' }}>
+          <Html center zIndexRange={[2, 0]} position={[0, 2.22, 0]} distanceFactor={14} style={{ pointerEvents: 'none' }}>
             <div className="player-tag">
               <i style={{ background: player.color }} />{player.name}<span>{'●'.repeat(player.hp)}</span>
             </div>

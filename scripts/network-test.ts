@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { io, type Socket } from 'socket.io-client';
 import type { ClientEvents, ServerEvents, JoinReply } from '../packages/shared/src/protocol.ts';
+import { isWeaponId } from '../packages/shared/src/weapons.ts';
 import { PETS, type PetId } from '../packages/shared/src/pets.ts';
 import type { Snapshot, Input } from '../packages/shared/src/types.ts';
 const url = process.env.TEST_SERVER_URL || 'http://localhost:3001';
@@ -30,6 +31,7 @@ async function connect(name: string, room?: string, token?: string, pet: PetId =
   });
   assert.ok(result.ok, result.ok ? '' : result.error);
   assert.equal(result.snapshot.players.find((p) => p.id === result.id)?.pet, pet);
+  assert.ok(isWeaponId(result.snapshot.players.find((p) => p.id === result.id)?.weapon));
   snapshots.set(s.id!, result.snapshot);
   return { s, id: result.id, room: result.snapshot.room, token: result.token };
 }
@@ -92,8 +94,10 @@ try {
   assert.equal(before.hp, 3);
   let shotEvents = 0;
   a.s.on('shot', () => shotEvents++);
-  const shootUntil = Date.now() + 700;
-  while (Date.now() < shootUntil) {
+  const originalWeapon = snapshots.get(a.s.id!)!.players.find((p) => p.id === a.id)!.weapon;
+  const victimWeapon = before.weapon;
+  const shootUntil = Date.now() + 5000;
+  while (Date.now() < shootUntil && snapshots.get(b.s.id!)!.players.find((p) => p.id === b.id)!.hp > 0) {
     command(a.s, { fire: true });
     await pause(40);
   }
@@ -104,14 +108,18 @@ try {
   assert.equal(snapA.players.find((p) => p.id === a.id)!.score, 1);
   assert.equal(snapB.players.find((p) => p.id === b.id)!.hp, 0);
   assert.equal(snapB.feed[0].victim, 'Bob');
-  assert.ok(shotEvents >= 3);
+  assert.ok(shotEvents >= 1);
+  const nextWeapon = snapA.players.find((p) => p.id === a.id)!.weapon;
+  assert.notEqual(nextWeapon, originalWeapon);
+  assert.equal(snapB.players.find((p) => p.id === a.id)!.weapon, nextWeapon);
   console.log(
-    'PASS: movement through venue doors, three validated hits, synchronized elimination and score',
+    'PASS: movement through venue doors, validated weapon damage, elimination, score and synchronized weapon shuffle',
   );
   await pause(3200);
   assert.equal(snapshots.get(b.s.id!)!.players.find((p) => p.id === b.id)!.hp, 3);
   assert.equal(snapshots.get(a.s.id!)!.players.find((p) => p.id === b.id)!.pet, 'dewey');
-  console.log('PASS: three-second respawn preserves the selected pet for other clients');
+  assert.equal(snapshots.get(b.s.id!)!.players.find((p) => p.id === b.id)!.weapon, victimWeapon);
+  console.log('PASS: respawn preserves the selected pet and current weapon for other clients');
   const prior = snapshots.get(a.s.id!)!.players.find((p) => p.id === a.id)!.position;
   a.s.emit('input', {
     seq: 1e9,
@@ -133,6 +141,7 @@ try {
   await pause(150);
   const rejoined = await connect('Bob', a.room, saved.token, 'rocky');
   assert.equal(rejoined.id, saved.id);
+  assert.equal(snapshots.get(rejoined.s.id!)!.players.find((p) => p.id === b.id)!.weapon, victimWeapon);
   const takeover = await connect('Bob', a.room, saved.token, 'rocky');
   assert.equal(takeover.id, saved.id);
   await pause(100);

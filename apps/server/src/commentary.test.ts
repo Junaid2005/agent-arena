@@ -29,6 +29,7 @@ function shot(partial: Partial<Shot> & Pick<Shot, 'shooter'>): Shot {
     from: { x: 0, y: 1, z: 0 },
     to: { x: 0, y: 1, z: 1 },
     color: '#ffffff',
+    weapon: 'pistol',
     at,
     ...partial,
   };
@@ -478,4 +479,28 @@ test('commentator opens on activity, casts an opening line, and closes after idl
   assert.equal(created.length, 2);
   assert.equal(created[1].starts, 1);
   commentator.stop();
+});
+
+test('rocket launches are not whiffs and only the impact announces the kill', () => {
+  const detector = new EventDetector();
+  const killer = player('0', 'Alice'), victim = player('1', 'Bob');
+  const launches = Array.from({ length: 8 }, () => shot({ shooter: killer.id, weapon: 'rpg', travelMs: 1000, kills: [] }));
+  const events = detector.observe([killer, victim], launches, base);
+  assert.ok(!events.some((e) => e.kind === 'whiff_spree' || e.kind === 'first_blood'));
+  victim.hp = 0;
+  const impact = detector.observe([killer, victim], [shot({ shooter: killer.id, weapon: 'rpg', impact: true,
+    hit: victim.id, killed: true, kills: [victim.id] })], base + 1000);
+  assert.ok(impact.some((e) => e.kind === 'first_blood' && /Bob/.test(e.text)));
+});
+
+test('one blast announces every killed victim, including kills beyond the first hit', () => {
+  const detector = new EventDetector();
+  const killer = player('0', 'Alice'), survivor = player('1', 'Survivor'),
+    first = player('2', 'Bob'), second = player('3', 'Charlie');
+  first.hp = second.hp = 0;
+  const events = detector.observe([killer, survivor, first, second], [shot({ shooter: killer.id,
+    weapon: 'rpg', impact: true, hit: survivor.id, killed: true, kills: [first.id, second.id] })], base);
+  assert.ok(events.some((e) => e.kind === 'first_blood' && /Bob/.test(e.text)));
+  assert.ok(events.some((e) => e.kind === 'multi_kill' && /Charlie/.test(e.text)));
+  assert.ok(!events.some((e) => /eliminated Survivor/.test(e.text)));
 });
