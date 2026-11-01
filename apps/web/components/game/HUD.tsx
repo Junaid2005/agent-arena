@@ -6,6 +6,7 @@ import {
   Crosshair,
   LogOut,
   Maximize,
+  Radio,
   Trophy,
   Users,
   Volume2,
@@ -49,7 +50,9 @@ export function HUD() {
     me = snap?.players.find((p) => p.id === s.id),
     remaining = Math.max(0, Math.ceil(((snap?.endsAt || now) - now) / 1000)),
     dead = me?.hp === 0,
-    finished = false;
+    finished = false,
+    captionLive =
+      s.casterOn && !!s.caption.text && Date.now() - s.caption.at < 6000;
   const sorted = [...(snap?.players || [])].sort(
     (a, b) => b.score - a.score || a.deaths - b.deaths,
   );
@@ -93,6 +96,10 @@ export function HUD() {
           <button onClick={s.toggleMute}>
             {s.muted ? <VolumeX size={16} /> : <Volume2 size={16} />} {s.muted ? 'Unmute' : 'Mute'}
           </button>
+          <button onClick={s.toggleCaster}>
+            <Radio size={16} />
+            Commentary {s.casterOn ? 'on' : 'off'}
+          </button>
           <button onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})}>
             <Maximize size={16} />
             Fullscreen
@@ -122,6 +129,15 @@ export function HUD() {
             </div>
           ))}
       </div>
+      {captionLive && (
+        <div className="caster-caption" aria-live="polite">
+          <span className="caster-tag">
+            <i />
+            LIVE CAST
+          </span>
+          <p>{s.caption.text}</p>
+        </div>
+      )}
       <div className="status-toast">
         {s.status === 'reconnecting' ? (
           <span className="reconnecting">

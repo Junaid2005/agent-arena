@@ -13,6 +13,7 @@ import { cleanName, validateInput } from './validation.ts';
 import { newPlayer } from './players.ts';
 import { simulate } from './simulation.ts';
 import { isPetId } from '../../../packages/shared/src/pets.ts';
+import { Commentator } from './commentator.ts';
 
 const origins = (process.env.CORS_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000')
   .split(',')
@@ -36,6 +37,7 @@ const http = createServer((req, res) => {
           0,
         ),
         uptime: Math.floor(process.uptime()),
+        commentary: commentator.status,
       }),
     );
     return;
@@ -49,6 +51,12 @@ const io = new Server<ClientEvents, ServerEvents>(http, {
   maxHttpBufferSize: 16384,
   pingTimeout: 25000,
   pingInterval: 10000,
+});
+const liveRoom = publicRoom(Date.now());
+const commentator = new Commentator({
+  emitAudio: (payload) => io.to(liveRoom.code).emit('commentaryAudio', payload),
+  emitText: (payload) => io.to(liveRoom.code).emit('commentaryText', payload),
+  env: process.env,
 });
 const sessions = new Map<string, { room: Room; member: Member }>();
 const joins = new Map<string, { start: number; count: number }>();
@@ -161,6 +169,16 @@ const tick = setInterval(() => {
     }
     const shots = simulate(room, now);
     for (const shot of shots) io.to(code).emit('shot', shot);
+    if (code === liveRoom.code) {
+      const players = [...room.members.values()]
+        .filter((m) => m.socketId)
+        .map((m) => m.player);
+      try {
+        commentator.tick(players, shots, now);
+      } catch (error) {
+        console.error('Commentary tick failed:', error);
+      }
+    }
     io.to(code).emit('snapshot', snapshot(room, now));
   }
   for (const [ip, rate] of joins) if (now - rate.start > 60000) joins.delete(ip);
@@ -171,6 +189,7 @@ http.listen(port, '0.0.0.0', () =>
 );
 function shutdown() {
   clearInterval(tick);
+  commentator.stop();
   io.close();
   http.close(() => process.exit(0));
 }

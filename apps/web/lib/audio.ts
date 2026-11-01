@@ -111,3 +111,7 @@ export function playSound(kind: Sound, volume = 1, pan = 0) {
     case 'step': burst(650 + Math.random() * 250, 0.055, 0.1); break;
   }
 }
+
+export function getAudioContext() {
+  return audio;
+}

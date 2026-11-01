@@ -12,6 +12,7 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 - [x] M6: Venue reconstructed manually from the supplied floor plan and video, primitive collisions, stage ramp, room labels, furniture, brick, windows and trusses; optional GLB overlay
 - [x] M7: Responsive lobby/HUD and PUBG-style touch movement, right-side aiming, dedicated fire/jump/dive buttons
 - [x] M8 deployment: Vercel production build, persistent VPS container, HTTPS/WSS proxy, CORS and health endpoint
+- [x] Live commentary: Deepgram Voice Agent shoutcaster with shared PCM audio, captions, activity-gated billing and reconnects
 
 ## Verification
 
