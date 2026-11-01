@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { getAudioContext, playSound, setAudioMuted, spatialMix, unlockAudio } from './audio';
 export { unlockAudio } from './audio';
-import { io, type Socket } from 'socket.io-client';
-import type { ClientEvents, ServerEvents, JoinReply } from '../../../packages/shared/src/protocol';
+import { connectArena, type ArenaConnection } from './arena-connection';
 import type { Input, Player, Shot, Snapshot } from '../../../packages/shared/src/types';
 import { movePlayer } from '../../../packages/shared/src/movement';
 import { shoot, explode } from '../../../packages/shared/src/combat';
@@ -30,10 +29,9 @@ export const runtime: {
 } = { local: null, pending: [], seq: 0, clockOffset: 0, lastShot: 0 };
 export const serverUrl =
   process.env.NEXT_PUBLIC_SERVER_URL ||
-  (typeof window !== 'undefined' && !['localhost', '127.0.0.1'].includes(window.location.hostname)
-    ? 'https://ghost-arena.162.19.137.169.sslip.io'
-    : 'http://localhost:3001');
-let socket: Socket<ServerEvents, ClientEvents> | null = null;
+  (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001');
+let socket: ArenaConnection | null = null;
+let connectionVersion = 0;
 let timer: ReturnType<typeof setInterval> | null = null;
 let identity: { name: string; room?: string; token?: string; pet: PetId } | null = null;
 const clone = (p: Player): Player => ({ ...p, position: { ...p.position } });
@@ -93,27 +91,17 @@ export const useGame = create<State>((set, get) => ({
     applyCasterVolume();
   },
   join: (name, pet) => {
+    const version = ++connectionVersion;
     socket?.disconnect();
     if (timer) clearInterval(timer);
     commentaryPlayer?.stopAll();
     set({ status: 'connecting', error: '', selectedPet: pet, caption: { text: '', at: 0 } });
     const saved = sessionStorage.getItem('ghost:LIVE');
     identity = { name, pet, token: saved || undefined };
-    socket = io(serverUrl, {
-      transports: ['polling'],
-      timeout: 20000,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-    });
-    socket.on('connect', () => {
-      socket!.timeout(15000).emit('join', identity!, (err: Error | null, result: JoinReply) => {
-        if (err || !result) {
-          set({
-            error: 'The arena server did not respond. Try again or explore in practice mode.',
-            status: 'idle',
-          });
-          return;
-        }
+    socket = connectArena(serverUrl, {
+      identity: () => identity!,
+      joined: (result) => {
+        if (version !== connectionVersion) return;
         if (!result.ok) {
           set({ error: result.error, status: 'idle' });
           socket?.disconnect();
@@ -122,7 +110,8 @@ export const useGame = create<State>((set, get) => ({
         const joined = result.snapshot.players.find((p) => p.id === result.id);
         if (joined?.pet !== pet || !isWeaponId(joined.weapon)) {
           set({
-            screen: 'lobby', status: 'idle',
+            screen: 'lobby',
+            status: 'idle',
             error: 'The arena is updating its loadouts. Please try again shortly.',
           });
           socket?.disconnect();
@@ -146,52 +135,64 @@ export const useGame = create<State>((set, get) => ({
           weaponChangedAt: 0,
         });
         window.history.replaceState({}, '', '/');
-      });
-    });
-    socket.on('snapshot', (snapshot) => {
-      const me = snapshot.players.find((p) => p.id === get().id);
-      if (me) {
-        const previous = get().snapshot?.players.find((p) => p.id === me.id);
-        if (previous && previous.weapon !== me.weapon) {
-          set({ weaponChangedAt: performance.now() });
-          playSound('swap');
+      },
+      snapshot: (snapshot) => {
+        if (version !== connectionVersion) return;
+        const me = snapshot.players.find((p) => p.id === get().id);
+        if (me) {
+          const previous = get().snapshot?.players.find((p) => p.id === me.id);
+          if (previous && previous.weapon !== me.weapon) {
+            set({ weaponChangedAt: performance.now() });
+            playSound('swap');
+          }
+          if (previous && me.hp < previous.hp) {
+            set({ hurtAt: performance.now() });
+            playSound(me.hp === 0 ? 'out' : 'hurt');
+          } else if (previous?.hp === 0 && me.hp > 0) {
+            playSound('respawn');
+          }
+          runtime.clockOffset = snapshot.time - Date.now();
+          runtime.pending = runtime.pending.filter((i) => i.seq > me.seq);
+          const next = clone(me);
+          // Reconcile acknowledged input; render correction is eased by the character/camera.
+          for (const input of runtime.pending) movePlayer(next, input, DT, snapshot.time);
+          runtime.local = next;
         }
-        if (previous && me.hp < previous.hp) {
-          set({ hurtAt: performance.now() });
-          playSound(me.hp === 0 ? 'out' : 'hurt');
-        } else if (previous?.hp === 0 && me.hp > 0) {
-          playSound('respawn');
+        set({ snapshot });
+      },
+      shot: (shot) => {
+        if (version === connectionVersion) receiveShot(shot);
+      },
+      commentaryAudio: ({ pcm }) => {
+        if (version !== connectionVersion) return;
+        const ctx = getAudioContext();
+        if (!ctx || ctx.state !== 'running') return;
+        const player = commentaryFor(ctx);
+        player.setVolume(!get().muted && get().casterOn);
+        player.enqueue(pcm);
+      },
+      commentaryText: ({ text }) => {
+        if (version === connectionVersion) set({ caption: { text, at: Date.now() } });
+      },
+      error: (message) => {
+        if (version === connectionVersion)
+          set({ error: message, status: get().screen === 'game' ? 'reconnecting' : 'idle' });
+      },
+      disconnected: () => {
+        if (version === connectionVersion && get().screen === 'game')
+          set({ status: 'reconnecting' });
+      },
+      replaced: () => {
+        if (version === connectionVersion) {
+          get().leave();
+          set({ error: 'This player was opened in another tab. Enter again to play here.' });
         }
-        runtime.clockOffset = snapshot.time - Date.now();
-        runtime.pending = runtime.pending.filter((i) => i.seq > me.seq);
-        const next = clone(me);
-        // Reconcile acknowledged input; render correction is eased by the character/camera.
-        for (const input of runtime.pending) movePlayer(next, input, DT, snapshot.time);
-        runtime.local = next;
-      }
-      set({ snapshot });
-    });
-    socket.on('shot', receiveShot);
-    socket.on('commentaryAudio', ({ pcm }) => {
-      const ctx = getAudioContext();
-      if (!ctx || ctx.state !== 'running') return;
-      const player = commentaryFor(ctx);
-      player.setVolume(!get().muted && get().casterOn);
-      player.enqueue(pcm);
-    });
-    socket.on('commentaryText', ({ text }) => set({ caption: { text, at: Date.now() } }));
-    socket.on('connect_error', () =>
-      set({
-        error: 'Cannot reach the arena server. Retry or explore in practice mode.',
-        status: get().screen === 'game' ? 'reconnecting' : 'idle',
-      }),
-    );
-    socket.on('disconnect', () => {
-      if (get().screen === 'game') set({ status: 'reconnecting' });
+      },
     });
     startLoop();
   },
   practice: (name, pet = get().selectedPet) => {
+    ++connectionVersion;
     socket?.disconnect();
     if (timer) clearInterval(timer);
     commentaryPlayer?.stopAll();
@@ -244,6 +245,7 @@ export const useGame = create<State>((set, get) => ({
     startLoop();
   },
   leave: () => {
+    ++connectionVersion;
     set({
       screen: 'lobby',
       status: 'idle',
@@ -268,7 +270,10 @@ export const useGame = create<State>((set, get) => ({
 function receiveShot(shot: Shot) {
   const s = useGame.getState();
   useGame.setState({
-    shots: [...s.shots.filter((q) => shot.at - q.at < Math.max(950, (q.travelMs || 0) + 200)), shot].slice(-256),
+    shots: [
+      ...s.shots.filter((q) => shot.at - q.at < Math.max(950, (q.travelMs || 0) + 200)),
+      shot,
+    ].slice(-256),
     hitAt: shot.shooter === s.id && shot.hit ? performance.now() : s.hitAt,
   });
   const me = runtime.local;
@@ -293,8 +298,14 @@ function startLoop() {
       p = runtime.local;
     if (!p || (s.status !== 'online' && s.status !== 'practice')) return;
     const input: Input = { seq: ++runtime.seq, ...controls };
-    const before = { x: p.position.x, z: p.position.z, grounded: p.grounded, vy: p.vy,
-      diveUntil: p.diveUntil, knockUntil: p.knockUntil };
+    const before = {
+      x: p.position.x,
+      z: p.position.z,
+      grounded: p.grounded,
+      vy: p.vy,
+      diveUntil: p.diveUntil,
+      knockUntil: p.knockUntil,
+    };
     const now = Date.now() + runtime.clockOffset;
     movePlayer(p, input, DT, now);
     // Emit movement cues only during prediction, never when replaying reconciled inputs.
@@ -305,13 +316,16 @@ function startLoop() {
       if (p.knockUntil > before.knockUntil) playSound('stumble');
       if (p.grounded && now >= p.diveUntil && now >= p.knockUntil) {
         stride += Math.hypot(p.position.x - before.x, p.position.z - before.z);
-        if (stride >= 1.8) { playSound('step'); stride = 0; }
+        if (stride >= 1.8) {
+          playSound('step');
+          stride = 0;
+        }
       } else stride = 0;
     } else stride = 0;
     if (s.status === 'online') {
       runtime.pending.push(input);
       runtime.pending = runtime.pending.slice(-60);
-      socket?.emit('input', input);
+      socket?.sendInput(input);
     } else {
       const now = Date.now();
       projectiles = projectiles.filter((flight) => {

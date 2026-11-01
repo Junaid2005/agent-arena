@@ -1,7 +1,7 @@
 # GHOST ARENA status
 
 Public frontend: https://ghost-arena-theta.vercel.app
-Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
+Game health: https://ghost-arena-theta.vercel.app/api/health
 
 ## Completed implementation
 
@@ -11,8 +11,8 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 - [x] M5 partial: Articulated default humanoid, cosmetic wobble, strides, recoil, dive, stumble and collapse; synchronized knockdown state
 - [x] M6: Venue reconstructed manually from the supplied floor plan and video, primitive collisions, stage ramp, room labels, furniture, brick, windows and trusses; optional GLB overlay
 - [x] M7: Responsive lobby/HUD and PUBG-style touch movement, right-side aiming, dedicated fire/jump/dive buttons
-- [x] M8 deployment: Vercel production build, persistent VPS container, HTTPS/WSS proxy, CORS and health endpoint
-- [x] Live commentary: Deepgram Voice Agent shoutcaster with shared PCM audio, captions, activity-gated billing and reconnects
+- [x] M8 deployment: Vercel frontend and native WebSocket game routes; shared Upstash Redis state, health endpoint and automatic reconnection.
+- Live commentary remains available on the standalone server; Vercel commentary integration is deferred.
 
 ## Verification
 
@@ -30,12 +30,12 @@ Persistent server: https://ghost-arena.162.19.137.169.sslip.io/health
 - Real ragdoll simulation and spectator mode are not implemented.
 - Venue dimensions are approximate; no scale was supplied. Optional GLBs still need aligned manual collider geometry.
 - Model loading supports GLB and embedded clips but generated-model orientation, skeletal compatibility and animation acceptance remain untested.
-- Server restarts reset in-memory rooms. Demo DNS uses sslip.io; Caddy route restoration uses a one-minute cron job.
+- Longer Vercel soak/load tests remain deferred for the MVP; free Redis quotas limit sustained traffic.
 - Two people on physical devices still need to play the production URL.
 
 ## Next actions
 
-Finish production single-arena/mobile checks, push one initial commit to the public GitHub repository, then enable/test avatar generation when credentials are supplied.
+Merge the Vercel migration PR to preserve this setup on future Git deployments. Follow up with production soak/mobile checks and avatar generation when credentials are supplied.
 
 ## Auto-deployment setup
 
@@ -46,7 +46,7 @@ Finish production single-arena/mobile checks, push one initial commit to the pub
 - GitHub CI runs successfully with all eight tests, type checking and the production build.
 - Added CI for web/server type checking, unit tests and production frontend builds.
 - Corrected the existing solo-combat test fixture to keep companion fire on cooldown; player-shot and respawn assertions remain intact.
-- The VPS server is separate from Vercel’s frontend deployment pipeline.
+- Production frontend and multiplayer now deploy together on Vercel; the old VPS game service is retired.
 
 ## Landing-page scrolling
 
@@ -54,3 +54,14 @@ Finish production single-arena/mobile checks, push one initial commit to the pub
 - The 3D background stays fixed while the lobby scrolls.
 - Browser-verified at 1366×620, 1280×720 and 390×844: mouse-wheel scrolling reaches the entry button without horizontal overflow.
 - Confirmed entering the arena still produces a fixed 620px-high game viewport with scrolling disabled. Web/server type checking passes.
+
+## Vercel multiplayer MVP — 1 November 2026
+
+- Upstash free Redis linked to production and previews, automatic paid upgrades disabled; secrets remain server-side.
+- Native WSS `/api/arena`, Redis leader fencing, private checkpoints, cross-instance input/snapshot relay and reconnect identity. Production and Redis run in `iad1`.
+- Type checking, 47 unit tests, two-instance/eight-client Redis integration and production build passed locally. Dependency audit: zero vulnerabilities.
+- Actual Vercel candidate and public production URL both passed the short two-client smoke: health, shared movement, manual shots and reconnect identity.
+- Candidate `dpl_6EGuxyKoe24AqLrRiieEwwmwgePD` promoted to the public URL. Website and game health return HTTP 200.
+- Full production combat/load/long-duration testing deferred at the user's request. No two-human physical-device test claimed.
+- Retired the VPS game container, its proxy-restoration cron and its Caddy route; unrelated services were left running.
+- Integrated teammate pet-character and random-gun changes; updated distributed combat fixture passes. Vercel uses a new state namespace for the weapon protocol; existing sessions should reload after cutover.
