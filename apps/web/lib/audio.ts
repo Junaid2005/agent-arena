@@ -1,7 +1,8 @@
 import type { Vec3 } from '../../../packages/shared/src/types';
 
 export type Sound = 'shot' | 'pet' | 'splat' | 'hit' | 'elimination' | 'hurt' | 'out' |
-  'respawn' | 'jump' | 'land' | 'dive' | 'stumble' | 'step';
+  'respawn' | 'jump' | 'land' | 'dive' | 'stumble' | 'step' |
+  'ar' | 'smg' | 'sniper' | 'rocket' | 'explosion' | 'laser' | 'fart' | 'confetti' | 'swap';
 let audio: AudioContext | null = null;
 let master: GainNode | null = null;
 let noise: AudioBuffer | null = null;
@@ -96,6 +97,15 @@ export function playSound(kind: Sound, volume = 1, pan = 0) {
     connect(source, gain, duration + 0.01, filter);
   };
   switch (kind) {
+    case 'ar': burst(3200, 0.07, 0.24); tone(180, 65, 0.07, 0.13, 'sawtooth'); break;
+    case 'smg': burst(3800, 0.045, 0.16); tone(280, 90, 0.045, 0.08, 'square'); break;
+    case 'sniper': burst(4200, 0.2, 0.35); tone(100, 28, 0.28, 0.25, 'triangle'); break;
+    case 'rocket': burst(1200, 0.28, 0.3); tone(130, 45, 0.28, 0.22, 'sawtooth'); break;
+    case 'explosion': burst(900, 0.28, 0.4); tone(75, 22, 0.5, 0.3, 'triangle'); break;
+    case 'laser': tone(1400, 180, 0.13, 0.12, 'sawtooth'); tone(2100, 400, 0.1, 0.05); break;
+    case 'fart': tone(85, 32, 0.28, 0.22, 'sawtooth'); tone(93, 35, 0.26, 0.13, 'square'); burst(350, 0.25, 0.15); break;
+    case 'confetti': burst(3800, 0.18, 0.3); tone(340, 80, 0.15, 0.17, 'triangle'); break;
+    case 'swap': tone(440, 1760, 0.28, 0.13, 'triangle'); tone(660, 2640, 0.25, 0.06); break;
     case 'shot': burst(2400, 0.09, 0.28); tone(210, 55, 0.1, 0.18, 'triangle'); break;
     case 'pet': tone(580, 170, 0.13, 0.13, 'triangle'); burst(1600, 0.06, 0.12); break;
     case 'splat': burst(1300, 0.13, 0.22); tone(140, 45, 0.08, 0.1); break;
@@ -110,4 +120,8 @@ export function playSound(kind: Sound, volume = 1, pan = 0) {
     case 'stumble': burst(600, 0.18, 0.22); tone(130, 45, 0.16, 0.12); break;
     case 'step': burst(650 + Math.random() * 250, 0.055, 0.1); break;
   }
+}
+
+export function getAudioContext() {
+  return audio;
 }

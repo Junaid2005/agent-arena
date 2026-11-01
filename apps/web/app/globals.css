@@ -290,17 +290,19 @@ h1 .hero-asterisk {
   color: #edf5df; background: #0f1d19b8; border: 1px solid #9caf8850; font: inherit; cursor: pointer;
 }
 .pet-choice:hover, .pet-choice.selected { border-color: #b9fa44; background: #b9fa441c; box-shadow: inset 0 -2px #b9fa44; }
-.pet-preview { width: 38px; height: 42px; display: block; background-size: 800% 1100%; background-position: 0 0; background-repeat: no-repeat; }
+.pet-preview { width: 38px; height: 42px; display: block; background-size: 800% 900%; background-position: 0 0; background-repeat: no-repeat; }
 .pet-choice strong { font-size: 8px; line-height: 1; }
 .pet-choice small { font-size: 5px; line-height: 1.15; color: #b7c8a5; text-align: center; }
-.runner-poster {
+.pet-poster {
   position: absolute;
   right: 12%;
   bottom: 7%;
   width: min(37vw, 510px);
-  height: min(72vh, 760px);
+  height: min(40vw, 552px);
   pointer-events: none;
-  background: linear-gradient(0deg, #172421 2%, transparent 38%), url('/characters/ghost-runner.png') center bottom / contain no-repeat;
+  background-size: 800% 900%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
   filter: drop-shadow(0 22px 28px #07100d99);
   mask-image: linear-gradient(to bottom, transparent 0%, black 9%, black 82%, transparent 100%);
 }
@@ -592,6 +594,7 @@ h1 .hero-asterisk {
   margin-bottom: 20px;
 }
 .hud {
+  z-index: 5;
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -738,6 +741,47 @@ h1 .hero-asterisk {
     transform: translateX(0);
   }
 }
+.caster-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 118px;
+  transform: translateX(-50%);
+  width: min(620px, calc(100vw - 540px));
+  min-width: 280px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #172421ed;
+  border-left: 2px solid #b9fa44;
+  pointer-events: none;
+  z-index: 4;
+  animation: feed-in 0.22s ease-out;
+}
+.caster-caption p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.55;
+  letter-spacing: 0.4px;
+  overflow-wrap: anywhere;
+}
+.caster-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+  color: #b9fa44;
+  font-size: 7px;
+  letter-spacing: 1.6px;
+  white-space: nowrap;
+}
+.caster-tag i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #b9fa44;
+  box-shadow: 0 0 8px #b9fa44;
+}
 .status-toast {
   position: absolute;
   top: 111px;
@@ -811,7 +855,7 @@ h1 .hero-asterisk {
   font-size: 11px;
   font-weight: bold;
 }
-.buddy-readout { display: block; margin-top: 3px; font-size: 6px; letter-spacing: 1px; color: #b9fa44; }
+.character-readout { display: block; margin-top: 3px; font-size: 6px; letter-spacing: 1px; color: #b9fa44; }
 .health-pips {
   display: flex;
   gap: 4px;
@@ -1173,7 +1217,7 @@ kbd {
   }
 }
 @media (max-width: 760px) {
-  .runner-poster { display: none; }
+  .pet-poster { display: none; }
   .lobby-shell {
     min-height: 790px;
     height: max(100dvh, 790px);
@@ -1376,6 +1420,16 @@ kbd {
     font-size: 8px;
     padding: 7px;
     gap: 8px;
+  }
+  .caster-caption {
+    bottom: 208px;
+    width: calc(100vw - 30px);
+    max-width: 420px;
+    min-width: 0;
+    padding: 8px 10px;
+  }
+  .caster-caption p {
+    font-size: 8px;
   }
   .game-menu {
     top: 65px;
@@ -1617,6 +1671,15 @@ kbd {
   .kill-feed {
     top: 85px;
   }
+  .caster-caption {
+    bottom: 95px;
+    width: min(420px, calc(100vw - 470px));
+    min-width: 0;
+    padding: 7px 10px;
+  }
+  .caster-caption p {
+    font-size: 8px;
+  }
   .ammo {
     display: none;
   }
@@ -1683,4 +1746,95 @@ kbd {
   .simple-lobby .hero {
     top: 100px;
   }
+}
+
+/* Keep the full entry form reachable in short laptop windows. */
+.lobby-shell {
+  height: 100dvh;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.lobby-shell > .scene {
+  position: fixed;
+}
+.simple-lobby.lobby {
+  position: relative;
+  min-height: 100%;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+}
+.simple-lobby .lobby-header {
+  flex-shrink: 0;
+}
+.simple-lobby .hero {
+  position: relative;
+  top: auto;
+  flex-shrink: 0;
+  margin-top: clamp(24px, calc(23dvh - 100px), 120px);
+  margin-bottom: 48px;
+}
+.simple-lobby .lobby-footer {
+  position: relative;
+  bottom: auto;
+  right: auto;
+  width: 92%;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+@media (max-width: 760px) {
+  .simple-lobby .hero {
+    margin-top: clamp(24px, calc(19dvh - 82px), 120px);
+  }
+  .simple-lobby .lobby-footer {
+    width: 86%;
+  }
+}
+
+/* Arcade arsenal: a changing weapon accent on the existing arena scorecard. */
+.weapon-card {
+  position: absolute; right: 24px; bottom: 28px; width: 252px; padding: 14px 16px 0;
+  color: #f3f1df; background: #11251fed; border: 1px solid #ffffff28;
+  border-top: 3px solid var(--weapon-color); box-shadow: 5px 5px 0 #07130e60;
+  pointer-events: none;
+}
+.weapon-kicker { display: flex; justify-content: space-between; font-size: 7px; letter-spacing: 1px; color: #a6bda4; }
+.weapon-kicker b { color: var(--weapon-color); }
+.weapon-title { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+.weapon-title > span { font-size: 38px; line-height: 1; color: var(--weapon-color); }
+.weapon-title small { display: block; font-size: 7px; letter-spacing: 1.6px; color: var(--weapon-color); }
+.weapon-title strong { display: block; font-family: GhostDisplay, sans-serif; font-size: 23px; line-height: 1.05; margin-top: 4px; }
+.weapon-card p { font-size: 8px; color: #c2d2bc; margin: 12px 0; }
+.weapon-stats { display: flex; gap: 14px; font-size: 8px; padding-bottom: 12px; }
+.weapon-stats span:first-child { color: var(--weapon-color); }
+.weapon-card footer { border-top: 1px solid #ffffff20; margin: 0 -16px; padding: 9px 16px; font-size: 7px; letter-spacing: 0.5px; }
+.weapon-card footer span { color: var(--weapon-color); margin: 0 5px; }
+.weapon-swap {
+  position: absolute; top: 22%; left: 50%; transform: translateX(-50%); padding: 16px 24px;
+  background: #11251ff0; color: #f3f1df; border-left: 4px solid var(--weapon-color); text-align: center;
+  box-shadow: 6px 6px 0 #07130e60; pointer-events: none; animation: weapon-arrive 0.25s ease-out;
+}
+.weapon-swap small { display: block; font-size: 8px; letter-spacing: 1.2px; color: var(--weapon-color); }
+.weapon-swap strong { display: block; margin: 8px 0; font-family: GhostDisplay, sans-serif; font-size: 30px; white-space: nowrap; }
+.weapon-swap > span { font-size: 9px; color: #c2d2bc; }
+@keyframes weapon-arrive { from { opacity: 0; translate: 0 10px; } to { opacity: 1; translate: 0 0; } }
+@media (pointer: coarse), (max-width: 720px) {
+  .weapon-card { bottom: auto; top: 84px; left: 14px; right: auto; width: 166px; padding: 8px 10px 0; }
+  .weapon-title { gap: 8px; margin: 7px 0; }
+  .weapon-title > span { font-size: 24px; }
+  .weapon-title strong { font-size: 16px; }
+  .weapon-kicker { font-size: 6px; letter-spacing: 0; }
+  .weapon-card p, .weapon-stats { display: none; }
+  .weapon-card footer { margin: 0 -10px; padding: 6px 10px; font-size: 6px; }
+  .weapon-swap { top: 34%; padding: 12px; max-width: 90vw; }
+  .weapon-swap strong { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) { .weapon-swap { animation: none; } }
+@media (min-width: 1001px) {
+  .desktop-controls { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
+}
+@media (max-width: 1000px) { .desktop-controls { display: none; } }
+@media (pointer: coarse), (max-width: 720px) {
+  .status-toast { top: 84px; left: auto; right: 14px; transform: none; width: calc(100% - 200px); }
 }
