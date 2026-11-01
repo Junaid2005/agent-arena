@@ -5,7 +5,7 @@ Multiplayer paintball inside a hand-built 3D interpretation of the DevDay Exchan
 **Play:** https://agent-arena-paintball.vercel.app
 **Server health:** https://agent-arena-paintball.vercel.app/api/health
 
-Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Weapon damage determines how many hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; Vercel instances recover shared state from Redis.
+Enter a name and play. Everyone joins one public arena, with 12 concurrent seats. Weapon damage determines how many hits eliminate a player; respawns take three seconds. The game runs continuously: there are no room codes, match timers or automatic score resets. Scores last while the player’s server identity remains available. Disconnecting reserves the identity for 30 seconds; Server restarts reset the temporary arena state.
 
 ## Play as a Codex pet
 
@@ -34,7 +34,7 @@ Rockets explode at their traced impact point after flight time, giving targets t
 
 ## Live commentary
 
-The authoritative simulation owner runs one live shoutcaster for the public arena on Vercel or the standalone server. It watches kills, streaks, dives, camping and the general state of the match, then speaks short hype lines as 16 kHz PCM audio and captions through the arena connection. The audio is generated with the Deepgram Voice Agent API and is broadcast to everyone in the arena, so all players hear one shared cast.
+The persistent VPS server runs one live shoutcaster for the public arena. It watches kills, streaks, dives, camping and the general state of the match, then speaks short hype lines as 16 kHz PCM audio and captions through the arena connection. The audio is generated with the Deepgram Voice Agent API and is broadcast to everyone in the arena, so all players hear one shared cast.
 
 Commentary is opt-in and server-only. Set `DEEPGRAM_API_KEY` in the server process environment to enable it. For local development, put it in `apps/server/.env.local`; `npm run dev` loads that gitignored file with `--env-file-if-exists`. The key is never sent to the browser. Commentary only connects while connected players are active, and disconnects after `COMMENTARY_IDLE_MS` of inactivity, so Deepgram bills only for connected time. `COMMENTARY_ENABLED=false` turns it off without removing the key.
 
@@ -73,7 +73,7 @@ Mobile: left joystick to move, drag the right half to aim, hold FIRE to shoot. J
 
 ## Architecture
 
-Next.js App Router, React Three Fiber/Three.js, Drei, Rapier and Zustand. Production uses native WebSockets on Vercel Functions with Upstash Redis checkpoints, pub/sub and a fenced leader lease. One Node instance simulates at approximately 25 Hz; other instances relay inputs and snapshots. Connections recycle before the function duration limit and automatically resume. Local development retains the standalone Socket.IO server. Clients send sequenced inputs, predict movement using the shared simulation and reconcile acknowledged inputs; remote avatars interpolate. The server owns positions, movement bounds, collisions, hitscan, fire cooldown, health, scores and knockdown state. Player resume tokens stay in sessionStorage. There are no accounts; Redis stores temporary arena state.
+Next.js App Router, React Three Fiber/Three.js, Drei, Rapier and Zustand. The frontend runs on Vercel; one persistent Node/Socket.IO server on the VPS owns the 25 Hz simulation and the shared Deepgram commentary session. Clients use WSS with polling fallback, send sequenced inputs, predict movement and reconcile acknowledged inputs; remote avatars interpolate. Gameplay, inputs and audio never pass through Redis. The server owns collisions, hits, health, scores and knockdown state. Resume tokens stay in sessionStorage; disconnected identities are retained for 30 seconds. Server restarts reset arena state.
 
 Playable characters are camera-facing animated pet sprites using the built-in 8-column, 9-row sheets. The client has a stable Rapier capsule and static colliders. Authoritative movement uses shared kinematic collision rules. Hitscan uses authoritative boxes, with conservative ramp bounding boxes.
 
@@ -105,18 +105,25 @@ Vercel is connected to `Junaid2005/codex-paintabll` through its GitHub app, with
 
 `.github/workflows/ci.yml` runs type checking, simulation/combat tests and a production build on pushes and pull requests. Vercel’s native build and this CI check run independently; branch protection can require the CI check before merging. Fork deployment authorization remains managed by Vercel.
 
-Production game routes and frontend deploy together. CI also exercises two separate WebSocket servers against Redis, including owner retirement and eight clients.
+Production frontend deploys on Vercel; deploy server-side gameplay updates to the VPS separately. CI also exercises two separate WebSocket servers against Redis, including owner retirement and eight clients.
 
 ## Deployment
 
-The frontend and authoritative multiplayer run on Vercel in `iad1`, alongside the Upstash Redis region. Link the Upstash free integration to Production and Preview; keep automatic paid upgrades disabled. Set server-only `REDIS_URL` (or `KV_URL`) to its TLS Redis URL. Leave `NEXT_PUBLIC_SERVER_URL` unset in production to use same-origin `/api/arena` WebSockets. Health is `/api/health`.
+The frontend runs on Vercel at https://agent-arena-paintball.vercel.app. Its Production and Preview `NEXT_PUBLIC_SERVER_URL` is `https://ghost-arena.162.19.137.169.sslip.io`. `/api/health` proxies the persistent server's `/health`; the former Redis WebSocket route returns 410 so it cannot consume Upstash commands. Production no longer requires Redis.
+
+The VPS runs one isolated `ghost-arena-server` Docker container (one CPU, 512 MB memory limit, restart unless-stopped). It listens on loopback port 3011 behind the existing Caddy HTTPS/WSS proxy. Only this game's route and cron restorer are managed by the deployment scripts; other services remain untouched.
 
 ```sh
-vercel deploy --prod --yes
+bash scripts/deploy-server.sh
+ssh vps 'bash -s' < scripts/start-production.sh
 ```
 
-Vercel Functions support WebSockets but do not provide persistent shared memory. The Redis lease prevents two active simulations; fenced checkpoints preserve private player tokens and scores across instance changes. Preview state is isolated by branch; production deployments share state. Temporary disconnects reserve identities for 30 seconds. Idle arena checkpoints expire after 12 hours. Free Redis quotas limit sustained traffic; this MVP still needs longer production soak/load testing.
+Keep `PORT=3011`, `CORS_ORIGIN` (comma-separated permitted frontend origins), and server-only `DEEPGRAM_API_KEY` in `/home/ubuntu/ghost-arena/server.env` with mode 600. After changing credentials, rerun the start command to recreate the container. Vercel sensitive keys cannot be exported; copy your Deepgram key directly to this file. Missing commentary credentials do not stop gameplay.
 
-For local distributed testing, run Redis on port 6387 and `npm run test:distributed`. `TEST_VERCEL_URL=https://your-deployment TEST_MVP_SMOKE=1 npm run test:vercel` performs the short two-client production smoke test. Omit the smoke flag for the longer combat fixture on an empty test arena. Protected deployments can supply server-side `TEST_VERCEL_BYPASS`.
+Vercel Git deployment updates the frontend automatically. Server-side changes require the explicit VPS deployment above. Preview browser testing requires adding its exact origin to `CORS_ORIGIN`; the public production domains and localhost are already allowed.
 
-Legacy VPS deployment scripts remain for reference; production no longer requires that host after cutover. Do not commit `.env` files, API keys, generated deployment credentials or source video. The status file records completed checks and remaining gaps.
+```sh
+TEST_SERVER_URL=https://ghost-arena.162.19.137.169.sslip.io TEST_ORIGIN=https://agent-arena-paintball.vercel.app npm run test:network
+```
+
+This network fixture creates nine clients and checks shared movement, combat, score, weapons, respawn, input validation and reconnects; run on an empty test arena. The older Redis implementation and distributed fixtures remain available for reference, but are not used by production. Avoid committing credentials, `.env` files or source video.

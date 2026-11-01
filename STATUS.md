@@ -80,3 +80,13 @@ Merge the Vercel migration PR to preserve this setup on future Git deployments. 
 - Connected the existing Deepgram commentator to the Vercel simulation owner; audio/captions relay through Redis and native WebSockets, with browser PCM decoding. Ownership loss and instance closure stop the billed session.
 - Type checking, 47 unit tests and the two-instance/eight-client integration pass, including identical audio/captions on both instances and commentary cleanup on retirement.
 - Real Vercel/Deepgram smoke succeeded: joined, received caption text and 1,920 bytes of generated PCM audio through native WebSocket.
+
+## VPS migration after Upstash quota exhaustion
+
+- Production game and commentary use one persistent Node/Socket.IO server; Redis is removed from the gameplay and audio path. Frontend remains on Vercel at https://agent-arena-paintball.vercel.app.
+- Vercel Production/Preview server URLs point to the VPS; WSS is preferred with polling fallback. Health proxies the VPS; the retired Functions arena route returns 410.
+- Fresh deployment includes the Hoxton venue, all pet characters and gun-game changes. Isolated container has a one-CPU/512-MB limit, automatic restart, Caddy HTTPS and route restoration; unrelated services are untouched.
+- Type checking and 66 unit tests pass. Nine real clients passed the VPS production WSS test: movement, combat, score/weapon synchronization, respawn, invalid input and reconnects.
+- Twenty public WebSocket ping samples from the development machine: median 29 ms, p95 107 ms. This includes the test network and does not guarantee latency on other connections. Container sampled at 1.2% CPU, 35 MB RAM.
+- Commentary awaits the Deepgram key in `/home/ubuntu/ghost-arena/server.env`; Vercel treats the existing key as sensitive and refuses export. Gameplay remains available without it. Server restarts reset the temporary arena scores.
+- Promoted deployment `dpl_9e62onoiEgowdSXSPR145Q3bkc9e` to the public site. Browser entered the live arena; VPS health observed that player. Public health returns HTTP 200 with `hosting: vps`; retired Redis route returns HTTP 410.

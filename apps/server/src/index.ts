@@ -31,6 +31,8 @@ const http = createServer((req, res) => {
       JSON.stringify({
         ok: true,
         service: 'agent-arena',
+        hosting: 'vps',
+        tickRate: TICK_RATE,
         rooms: rooms.size,
         players: [...rooms.values()].reduce(
           (n, r) => n + [...r.members.values()].filter((m) => m.socketId).length,
