@@ -19,10 +19,11 @@ export function entranceLocalPlan(x: number, z: number): PlanPoint {
   return [ENTRANCE_FOYER.point[0] + (c * x + s * z) / scale,
     ENTRANCE_FOYER.point[1] + (-s * x + c * z) / scale];
 }
-export const ENTRANCE_SCALE_POINT = entranceLocalPlan(1.8, -1.5);
+// Keep the large scale against the side wall, with a clear sightline along circulation.
+export const ENTRANCE_SCALE_POINT: PlanPoint = [829, 783];
 export const ENTRANCE_BANNERS = [
-  { id: 'foyer-codex-banner', point: [827, 770] as PlanPoint, title: 'Codex', blue: true },
-  { id: 'foyer-black-banner', point: [827, 750] as PlanPoint, title: 'OpenAI', blue: false },
+  { id: 'foyer-codex-banner', point: [827, 753] as PlanPoint, title: 'Codex', blue: true },
+  { id: 'foyer-black-banner', point: [827, 732] as PlanPoint, title: 'OpenAI', blue: false },
 ];
 export const ENTRANCE_VIEWS = {
   // The corridor turns north after the diagonal entrance; face along circulation.
