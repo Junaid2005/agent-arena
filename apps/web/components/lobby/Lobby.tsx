@@ -85,7 +85,7 @@ export function Lobby() {
         </form>
         <div className="pet-poster" aria-hidden="true" style={{ backgroundImage: `url(${PETS[pet].sprite})` }} />
       </section>
-      <footer className="venue-name">DEV DAY EXCHANGE</footer>
+      <footer className="venue-name"><a href="/venue">HOXTON DOCKS / DEV DAY EXCHANGE ↗</a></footer>
     </div>
   );
 }

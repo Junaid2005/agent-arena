@@ -1,6 +1,7 @@
 import { ARENA, RESPAWN_MS } from './constants.ts';
 import type { Player, Shot, Vec3 } from './types.ts';
 import { WEAPONS, rollWeapon } from './weapons.ts';
+import { rayOrientedBox } from './geometry.ts';
 
 export function rayBox(o: Vec3, d: Vec3, min: Vec3, max: Vec3): number | null {
   let near = 0, far = 80;
@@ -19,8 +20,7 @@ export function rayBox(o: Vec3, d: Vec3, min: Vec3, max: Vec3): number | null {
 function worldDistance(from: Vec3, d: Vec3, range: number) {
   let distance = range;
   for (const b of ARENA) {
-    const [x, y, z] = b.position, [sx, sy, sz] = b.size;
-    const t = rayBox(from, d, { x: x - sx / 2, y: y - sy / 2, z: z - sz / 2 }, { x: x + sx / 2, y: y + sy / 2, z: z + sz / 2 });
+    const t = rayOrientedBox(from, d, b);
     if (t !== null && t < distance) distance = t;
   }
   if (d.y < 0) distance = Math.min(distance, Math.max(0, -from.y / d.y));

@@ -66,6 +66,14 @@ Merge the Vercel migration PR to preserve this setup on future Git deployments. 
 - Retired the VPS game container, its proxy-restoration cron and its Caddy route; unrelated services were left running.
 - Integrated teammate pet-character and random-gun changes; updated distributed combat fixture passes. Vercel uses a new state namespace for the weapon protocol; existing sessions should reload after cutover.
 
+## Hoxton map integration (PR #13)
+
+- Imports the photo-informed venue, source plan, geometry tests, documentation and review screenshots.
+- Preserves Agent Arena branding and the centered game lobby at `/`, plus pets, gun/ammo art, no practice mode and the current Vercel/Redis transport.
+- Standalone walk-through at `/tour`, plan review at `/venue`, legacy `/paintball` redirects to `/`.
+- Game movement, shots, camera and Rapier now share the visible event furniture/stage and rotated walls. Spawns are moved out of locked rooms and furniture.
+- Geometry deployment requires a new Redis map namespace; old sessions must not restore positions from the previous map. No production deployment is included.
+
 ## Commentary and production address
 
 - Production domain: https://agent-arena-paintball.vercel.app, attached to the project for future auto-deployments. Shorter agent-arena and agent-arena-game names were unavailable.

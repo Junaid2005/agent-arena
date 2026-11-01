@@ -4,6 +4,7 @@ import type { ClientEvents, ServerEvents, JoinReply } from '../packages/shared/s
 import { isWeaponId } from '../packages/shared/src/weapons.ts';
 import { PETS, type PetId } from '../packages/shared/src/pets.ts';
 import type { Snapshot, Input } from '../packages/shared/src/types.ts';
+import { planToWorld } from '../packages/shared/src/venue.ts';
 const url = process.env.TEST_SERVER_URL || 'http://localhost:3001';
 const origin = process.env.TEST_ORIGIN || 'http://localhost:3000';
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -82,13 +83,14 @@ try {
   assert.deepEqual(new Set(snapshots.get(a.s.id!)!.players.map((p) => p.pet)), new Set(pets));
   console.log('PASS: all nine pet selections are distinct and visible in the shared arena');
   // Navigate through the venue using only input commands, never position writes.
-  await navigate(a, 11, 14);
-  await navigate(a, 11, 12);
-  await navigate(b, -11, 6.8);
-  await navigate(b, -4, 6.8);
-  await navigate(b, -4, 8.7);
-  await navigate(b, 11, 8.7);
-  await navigate(b, 11.65, 10);
+  const visit = async (client: typeof a, x: number, z: number) => {
+    const [wx, wz] = planToWorld([x, z]); await navigate(client, wx, wz);
+  };
+  await visit(a, 840, 706);
+  for (const [x, z] of [[463, 525], [463, 520], [544, 520], [544, 550], [549, 550], [549, 560], [554, 560], [554, 565], [624, 565], [624, 610], [629, 610], [629, 676], [634, 676], [634, 681], [785, 681], [785, 686], [795, 686], [795, 691], [810, 691], [810, 696], [840, 696], [840, 706]]) await visit(b, x, z);
+  const [ax] = planToWorld([840, 706]);
+  const [, bz] = planToWorld([840, 665]);
+  await navigate(b, ax + 0.65, bz);
   await pause(300);
   const before = snapshots.get(b.s.id!)!.players.find((p) => p.id === b.id)!;
   assert.equal(before.hp, 3);

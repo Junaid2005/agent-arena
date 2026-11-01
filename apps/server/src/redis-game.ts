@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import { Redis } from 'ioredis';
-import { DT, MAX_PLAYERS } from '../../../packages/shared/src/constants.ts';
+import { DT, MAX_PLAYERS, MAP_VERSION } from '../../../packages/shared/src/constants.ts';
 import type { JoinReply, JoinRequest } from '../../../packages/shared/src/protocol.ts';
 import type { Input, Snapshot } from '../../../packages/shared/src/types.ts';
 import type { ServerPacket } from '../../../packages/shared/src/websocket.ts';
@@ -72,10 +72,11 @@ export function redisUrl() {
   return url;
 }
 export function statePrefix() {
-  if (process.env.GHOST_STATE_PREFIX) return process.env.GHOST_STATE_PREFIX;
   const env = process.env.VERCEL_ENV || 'development';
   const branch = env === 'preview' ? `:${process.env.VERCEL_GIT_COMMIT_REF || 'preview'}` : '';
-  return `ghost-arena:v2:${env}${branch}`;
+  const prefix = process.env.GHOST_STATE_PREFIX || `ghost-arena:v2:${env}${branch}`;
+  // Old arena positions and in-flight rockets cannot be restored into new geometry.
+  return `${prefix}:${MAP_VERSION}`;
 }
 function client(url: string) {
   return new Redis(url, {

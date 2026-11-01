@@ -1,3 +1,4 @@
+import { planToWorld } from '../../../packages/shared/src/venue.ts';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -155,8 +156,14 @@ test(
       );
       assert.equal(alice.reply!.snapshot.room, bob.reply!.snapshot.room);
       console.log('PASS: clients on separate processes see one arena');
-      await alice.navigate(11, 14);
-      await alice.navigate(11, 12);
+      const visit = async (client: typeof alice, x: number, z: number) => {
+        const [wx, wz] = planToWorld([x, z]); await client.navigate(wx, wz);
+      };
+      await visit(alice, 840, 706);
+      for (const [x, z] of [[463, 525], [463, 520], [544, 520], [544, 550], [549, 550], [549, 560], [554, 560], [554, 565], [624, 565], [624, 610], [629, 610], [629, 676], [634, 676], [634, 681], [785, 681], [785, 686], [795, 686], [795, 691], [810, 691], [810, 696], [840, 696], [840, 706]]) await visit(bob, x, z);
+      const [ax] = planToWorld([840, 706]);
+      const [, bz] = planToWorld([840, 665]);
+      await bob.navigate(ax + 0.65, bz);
       await until(
         () => alice.commentary.length >= 2 && bob.commentary.length >= 2,
         'shared commentary missing',
@@ -167,11 +174,6 @@ test(
       assert.ok(audio?.event === 'commentaryAudio');
       assert.deepEqual([...Buffer.from(audio.data.pcm, 'base64')], [0, 1, 2, 3]);
       console.log('PASS: one commentator broadcasts identical PCM and captions across instances');
-      await bob.navigate(-11, 6.8);
-      await bob.navigate(-4, 6.8);
-      await bob.navigate(-4, 8.7);
-      await bob.navigate(11, 8.7);
-      await bob.navigate(11.65, 10);
       const deadline = Date.now() + 8000;
       while (bob.me!.deaths === 0 && Date.now() < deadline) {
         alice.input({ fire: true, yaw: 0, pitch: 0 });

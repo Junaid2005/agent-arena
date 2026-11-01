@@ -1,3 +1,4 @@
+import { planToWorld } from '../packages/shared/src/venue.ts';
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 import type { Input, Snapshot, Shot } from '../packages/shared/src/types.ts';
@@ -156,13 +157,14 @@ try {
       'PASS: MVP public Vercel health, two-player movement, firing and reconnect identity',
     );
   } else {
-    await alice.move(11, 14);
-    await alice.move(11, 12);
-    await bob.move(-11, 6.8);
-    await bob.move(-4, 6.8);
-    await bob.move(-4, 8.7);
-    await bob.move(11, 8.7);
-    await bob.move(11.65, 10);
+    const visit = async (client: typeof alice, x: number, z: number) => {
+      const [wx, wz] = planToWorld([x, z]); await client.move(wx, wz);
+    };
+    await visit(alice, 840, 706);
+    for (const [x, z] of [[463, 525], [463, 520], [544, 520], [544, 550], [549, 550], [549, 560], [554, 560], [554, 565], [624, 565], [624, 610], [629, 610], [629, 676], [634, 676], [634, 681], [785, 681], [785, 686], [795, 686], [795, 691], [810, 691], [810, 696], [840, 696], [840, 706]]) await visit(bob, x, z);
+    const [ax] = planToWorld([840, 706]);
+    const [, bz] = planToWorld([840, 665]);
+    await bob.move(ax + 0.65, bz);
     const deadline = Date.now() + 8000;
     while (bob.me!.deaths === 0 && Date.now() < deadline) {
       alice.input({ fire: true, yaw: 0, pitch: 0 });
