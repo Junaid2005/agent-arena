@@ -1,92 +1,26 @@
-# AGENT ARENA status
+# Agent Arena status
 
-Public frontend: https://agent-arena-paintball.vercel.app
-Game health: https://agent-arena-paintball.vercel.app/api/health
+Updated: 2 November 2026.
 
-## Completed implementation
+- Public game: https://agent-arena-paintball.vercel.app
+- Frontend: Next.js on Vercel; Git auto-deploys from `feat/ghost-arena`.
+- Backend: authoritative 25 Hz Node/Socket.IO server on the VPS. One continuous arena, 12 seats. No Redis dependency.
+- Venue: manually reconstructed Hoxton Docks map with shared visual/collision geometry.
+- Desktop keyboard/mouse and mobile move/aim/fire controls; pet character selection; eight randomized weapons, server-owned hits, scores, respawns and reconnects.
+- Deepgram commentary key is stored privately on the VPS. Real generated audio and captions were verified after transfer.
 
-- [x] M1: Walkable R3F arena, stable capsule movement, jumping, diving, pointer-lock camera and shooting
-- [x] M2: 25 Hz authoritative Node/Socket.IO server, one public arena (12 seats), prediction/reconciliation, remote interpolation, reconnection and cleanup
-- [x] M3: Validated hitscan, three-hit health, trails/impacts, muzzle flash, hit feedback, elimination feed, scores, three-second respawn and continuous play with no timer or score resets
-- [x] M5 partial: Articulated default humanoid, cosmetic wobble, strides, recoil, dive, stumble and collapse; synchronized knockdown state
-- [x] M6: Venue reconstructed manually from the supplied floor plan and video, primitive collisions, stage ramp, room labels, furniture, brick, windows and trusses; optional GLB overlay
-- [x] M7: Responsive lobby/HUD and PUBG-style touch movement, right-side aiming, dedicated fire/jump/dive buttons
-- [x] M8 deployment: Vercel frontend and native WebSocket game routes; shared Upstash Redis state, health endpoint and automatic reconnection.
-- Live commentary remains available on the standalone server; Vercel commentary integration is deferred.
+## Cleanup and security
 
-## Verification
+- Removed the obsolete Redis implementation/protocol/tests, unused AWS/Vercel SDKs, old export script and unused exports.
+- Added ESLint/React hooks checks, Prettier, EditorConfig, Knip, dependency audit, secret scanning, container scanning and weekly dependency updates. CI exercises fresh local multiplayer servers; no paid API calls or production players are involved.
+- Added connection-attempt/concurrency limits, trusted-proxy IP validation, join deadlines, session-token validation and HTTP security headers.
+- Production image installs from the lockfile, excludes tests/development tooling, and contains no shell or package managers. Runtime is non-root, read-only, loopback-only and bounded by CPU, memory, process/file and log limits.
+- Original runtime: 22 vulnerability matches. Hardened runtime: zero known matches using Grype 0.121.0. npm audit and Git-history secret scan also report zero findings. See [audit report](docs/security-audit.md).
+- Type checking, linting, formatting, dead-code analysis, 67 unit tests, four security integration tests and the nine-client game fixture pass. The actual hardened image also passed the nine-client fixture on a separate VPS test port.
 
-- Seven unit tests pass: validation, collision/movement/jump, every spawn, combat/respawn, wall occlusion, match restart, dive/stumble/ramp recovery.
-- Type checking passes for web and server.
-- Local eight-client network test passed movement through venue doors, elimination, scores, respawn, invalid input, reconnect and shared-arena joining.
-- Vercel production build passed with Next 16.4.3; install audit reported zero vulnerabilities.
-- Public frontend and API return HTTP 200.
-- Desktop production browser entered the game.
-- Eight clients passed the production WSS combat test before the continuous-arena update. Updated shared-arena eight-client test passes locally. Mobile/touch verification in progress; no physical-device test claimed.
+## Remaining limitations
 
-## Known gaps / blockers
-
-- Genuine photo-to-3D pipeline is not implemented/enabled. Meshy docs researched; provider key, prepaid credits and shared object storage credentials are missing. No fake progress/model is shown.
-- Real ragdoll simulation and spectator mode are not implemented.
-- Venue dimensions are approximate; no scale was supplied. Optional GLBs still need aligned manual collider geometry.
-- Model loading supports GLB and embedded clips but generated-model orientation, skeletal compatibility and animation acceptance remain untested.
-- Longer Vercel soak/load tests remain deferred for the MVP; free Redis quotas limit sustained traffic.
-- Two people on physical devices still need to play the production URL.
-
-## Next actions
-
-Merge the Vercel migration PR to preserve this setup on future Git deployments. Follow up with production soak/mobile checks and avatar generation when credentials are supplied.
-
-## Auto-deployment setup
-
-- Merged Pets PR #1 is on default branch `feat/ghost-arena` at `910277d`.
-- Vercel project updated to Node 24 and Git deployment creation enabled.
-- GitHub app access is authorized and Vercel is connected to `Junaid2005/codex-paintabll`, confirmed through the project API.
-- Production branch: `feat/ghost-arena`. Default-branch pushes/merges publish production; other branches create previews.
-- GitHub CI runs successfully with all eight tests, type checking and the production build.
-- Added CI for web/server type checking, unit tests and production frontend builds.
-- Corrected the existing solo-combat test fixture to keep companion fire on cooldown; player-shot and respawn assertions remain intact.
-- Production frontend and multiplayer now deploy together on Vercel; the old VPS game service is retired.
-
-## Landing-page scrolling
-
-- The lobby now scrolls vertically on short laptop windows; its form and footer participate in normal layout rather than clipping below the viewport.
-- The 3D background stays fixed while the lobby scrolls.
-- Browser-verified at 1366×620, 1280×720 and 390×844: mouse-wheel scrolling reaches the entry button without horizontal overflow.
-- Confirmed entering the arena still produces a fixed 620px-high game viewport with scrolling disabled. Web/server type checking passes.
-
-## Vercel multiplayer MVP — 1 November 2026
-
-- Upstash free Redis linked to production and previews, automatic paid upgrades disabled; secrets remain server-side.
-- Native WSS `/api/arena`, Redis leader fencing, private checkpoints, cross-instance input/snapshot relay and reconnect identity. Production and Redis run in `iad1`.
-- Type checking, 47 unit tests, two-instance/eight-client Redis integration and production build passed locally. Dependency audit: zero vulnerabilities.
-- Actual Vercel candidate and public production URL both passed the short two-client smoke: health, shared movement, manual shots and reconnect identity.
-- Candidate `dpl_6EGuxyKoe24AqLrRiieEwwmwgePD` promoted to the public URL. Website and game health return HTTP 200.
-- Full production combat/load/long-duration testing deferred at the user's request. No two-human physical-device test claimed.
-- Retired the VPS game container, its proxy-restoration cron and its Caddy route; unrelated services were left running.
-- Integrated teammate pet-character and random-gun changes; updated distributed combat fixture passes. Vercel uses a new state namespace for the weapon protocol; existing sessions should reload after cutover.
-
-## Hoxton map integration (PR #13)
-
-- Imports the photo-informed venue, source plan, geometry tests, documentation and review screenshots.
-- Preserves Agent Arena branding and the centered game lobby at `/`, plus pets, gun/ammo art, no practice mode and the current Vercel/Redis transport.
-- Standalone walk-through at `/tour`, plan review at `/venue`, legacy `/paintball` redirects to `/`.
-- Game movement, shots, camera and Rapier now share the visible event furniture/stage and rotated walls. Spawns are moved out of locked rooms and furniture.
-- Geometry deployment requires a new Redis map namespace; old sessions must not restore positions from the previous map. No production deployment is included.
-
-## Commentary and production address
-
-- Production domain: https://agent-arena-paintball.vercel.app, attached to the project for future auto-deployments. Shorter agent-arena and agent-arena-game names were unavailable.
-- Connected the existing Deepgram commentator to the Vercel simulation owner; audio/captions relay through Redis and native WebSockets, with browser PCM decoding. Ownership loss and instance closure stop the billed session.
-- Type checking, 47 unit tests and the two-instance/eight-client integration pass, including identical audio/captions on both instances and commentary cleanup on retirement.
-- Real Vercel/Deepgram smoke succeeded: joined, received caption text and 1,920 bytes of generated PCM audio through native WebSocket.
-
-## VPS migration after Upstash quota exhaustion
-
-- Production game and commentary use one persistent Node/Socket.IO server; Redis is removed from the gameplay and audio path. Frontend remains on Vercel at https://agent-arena-paintball.vercel.app.
-- Vercel Production/Preview server URLs point to the VPS; WSS is preferred with polling fallback. Health proxies the VPS; the retired Functions arena route returns 410.
-- Fresh deployment includes the Hoxton venue, all pet characters and gun-game changes. Isolated container has a one-CPU/512-MB limit, automatic restart, Caddy HTTPS and route restoration; unrelated services are untouched.
-- Type checking and 66 unit tests pass. Nine real clients passed the VPS production WSS test: movement, combat, score/weapon synchronization, respawn, invalid input and reconnects.
-- Twenty public WebSocket ping samples from the development machine: median 29 ms, p95 107 ms. This includes the test network and does not guarantee latency on other connections. Container sampled at 1.2% CPU, 35 MB RAM.
-- Commentary awaits the Deepgram key in `/home/ubuntu/ghost-arena/server.env`; Vercel treats the existing key as sensitive and refuses export. Gameplay remains available without it. Server restarts reset the temporary arena scores.
-- Promoted deployment `dpl_9e62onoiEgowdSXSPR145Q3bkc9e` to the public site. Browser entered the live arena; VPS health observed that player. Public health returns HTTP 200 with `hosting: vps`; retired Redis route returns HTTP 410.
+- Photo-to-3D avatars, full simulated ragdolls and spectator mode are not implemented. Current pets are animated sprites.
+- Venue geometry is approximate. No two-human physical-device acceptance test is claimed.
+- Server restarts reset temporary game state. Server deployment remains explicit; Vercel Git deployment updates only the frontend.
+- This was a targeted application/container audit, not a full VPS penetration test or a guarantee that no vulnerabilities exist. Unrelated hosted services and the host-wide firewall/SSH policy were not changed.

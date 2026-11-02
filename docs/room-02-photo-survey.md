@@ -43,23 +43,22 @@ The simulator and review view share the event asset and transform. The tour uses
 
 The most useful next reference is **platform width, depth and height**, plus one near-frontal view that shows the stage edges and the nearest columns together. This refines the stage without requiring more duplicate crowd views. Door-wall orientation and the raised-bay roof section remain independent unresolved survey items.
 
-
 ## Detailed photo pass: confidence and remaining limits
 
 The user identified the requested interior sheet as the **OpenAI / DevDay Exchange Community Hackathon** backdrop shown beside the black-covered table. That readable text is reproduced. Artwork is a procedural approximation rather than the original print file; front and back placement is provisional.
 
 Implemented features cross-checked across the supplied views:
 
-| Feature | Visual evidence | What is and is not verified |
-| --- | --- | --- |
-| Folding chairs, timber trestle tables | Hall, audience and reverse-stage photographs | Black folding frames, seat/back forms and timber tops observed. 5 audience rows, 6 table groups, chair counts and positions are a representative estimate; occluded furniture cannot be counted exactly. |
-| Brown lounge seating | Repeated lounge photographs | Form and brown finish observed; dimensions and plan anchors estimated. |
-| DevDay banner and black registration table | Registration and lounge views; explicit user identification | Readable OpenAI / DevDay text confirmed. Graphic layout, dimensions and precise anchor are approximate. |
-| Brick / blockwork / concrete | Lounge, reverse-hall and glazing views | Material families and visible lintels confirmed. Exact face registration, historic brick dimensions and individual damage are unmeasured. Brick tiling is metric; blockwork uses a larger course scale. |
-| Sliding-gate ribs and rail | Industrial gate in hall photos and gate on the plan | Visible detailing added to the existing closed gate; no new opening or invented door height. |
-| Leaning red arched panel | Repeated lounge views | A decorative leaning panel is represented; no door opening is cut into the wall. Pattern, dimensions and placement estimated. |
-| Concrete beams / steel roof members | Upward and hall views | Structural character observed; rendered spans use existing plan column locations. Member sections and all upper roof elevations remain unmeasured. |
-| Coloured column lights | Several overlapping hall photographs | Small fixtures and coloured light observed; exact output, aiming and fixture positions estimated. |
+| Feature                                    | Visual evidence                                             | What is and is not verified                                                                                                                                                                              |
+| ------------------------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Folding chairs, timber trestle tables      | Hall, audience and reverse-stage photographs                | Black folding frames, seat/back forms and timber tops observed. 5 audience rows, 6 table groups, chair counts and positions are a representative estimate; occluded furniture cannot be counted exactly. |
+| Brown lounge seating                       | Repeated lounge photographs                                 | Form and brown finish observed; dimensions and plan anchors estimated.                                                                                                                                   |
+| DevDay banner and black registration table | Registration and lounge views; explicit user identification | Readable OpenAI / DevDay text confirmed. Graphic layout, dimensions and precise anchor are approximate.                                                                                                  |
+| Brick / blockwork / concrete               | Lounge, reverse-hall and glazing views                      | Material families and visible lintels confirmed. Exact face registration, historic brick dimensions and individual damage are unmeasured. Brick tiling is metric; blockwork uses a larger course scale.  |
+| Sliding-gate ribs and rail                 | Industrial gate in hall photos and gate on the plan         | Visible detailing added to the existing closed gate; no new opening or invented door height.                                                                                                             |
+| Leaning red arched panel                   | Repeated lounge views                                       | A decorative leaning panel is represented; no door opening is cut into the wall. Pattern, dimensions and placement estimated.                                                                            |
+| Concrete beams / steel roof members        | Upward and hall views                                       | Structural character observed; rendered spans use existing plan column locations. Member sections and all upper roof elevations remain unmeasured.                                                       |
+| Coloured column lights                     | Several overlapping hall photographs                        | Small fixtures and coloured light observed; exact output, aiming and fixture positions estimated.                                                                                                        |
 
 Furniture is visible by default and can be hidden. **Solid furniture** is off by default to preserve free inspection; when enabled the same furniture transforms produce collision boxes. Room shortcuts are checked for clearance in both modes. Repeated chair geometry is instanced for performance.
 

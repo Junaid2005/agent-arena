@@ -1,9 +1,9 @@
 import { WebSocket } from 'ws';
 import { COMMENTARY_SAMPLE_RATE } from '../../../packages/shared/src/constants.ts';
 
-export const DEEPGRAM_AGENT_URL = 'wss://agent.deepgram.com/v1/agent/converse';
+const DEEPGRAM_AGENT_URL = 'wss://agent.deepgram.com/v1/agent/converse';
 
-export type CasterLog = (message: string) => void;
+type CasterLog = (message: string) => void;
 
 /** The tiny part of a WebSocket this client needs. Fake sockets in tests implement the same shape. */
 export type CasterSocket = {
@@ -102,7 +102,10 @@ export class DeepgramCaster {
     try {
       socket =
         this.options.createSocket?.(DEEPGRAM_AGENT_URL, ['token', this.options.apiKey]) ??
-        (new WebSocket(DEEPGRAM_AGENT_URL, ['token', this.options.apiKey]) as unknown as CasterSocket);
+        (new WebSocket(DEEPGRAM_AGENT_URL, [
+          'token',
+          this.options.apiKey,
+        ]) as unknown as CasterSocket);
     } catch (error) {
       this.log(`Deepgram could not open a socket: ${errorText(error)}`);
       this.scheduleReconnect();
@@ -185,11 +188,15 @@ export class DeepgramCaster {
       return;
     }
     if (type === 'Warning') {
-      this.log(`Deepgram warning ${String(message.code ?? '')}: ${String(message.description ?? '')}`);
+      this.log(
+        `Deepgram warning ${String(message.code ?? '')}: ${String(message.description ?? '')}`,
+      );
       return;
     }
     if (type === 'Error') {
-      this.log(`Deepgram error ${String(message.code ?? '')}: ${String(message.description ?? '')}`);
+      this.log(
+        `Deepgram error ${String(message.code ?? '')}: ${String(message.description ?? '')}`,
+      );
       try {
         this.socket?.close();
       } catch {
@@ -250,7 +257,9 @@ export class DeepgramCaster {
       buffer = buffer.subarray(0, buffer.length - 1);
     }
     for (let offset = 0; offset < buffer.length; offset += MAX_CHUNK) {
-      const chunk = Buffer.from(buffer.subarray(offset, Math.min(offset + MAX_CHUNK, buffer.length)));
+      const chunk = Buffer.from(
+        buffer.subarray(offset, Math.min(offset + MAX_CHUNK, buffer.length)),
+      );
       this.options.onAudio(chunk);
     }
   }

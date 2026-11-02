@@ -2,7 +2,7 @@ import { ZONES } from '../../../packages/shared/src/constants.ts';
 import type { Player, Shot, Vec3 } from '../../../packages/shared/src/types.ts';
 
 /** Every threshold used by the commentary pipeline. Override per class in tests or tuning. */
-export const COMMENTARY_TUNING = {
+const COMMENTARY_TUNING = {
   forgetPlayerMs: 60_000,
   killWindowMs: 6_000,
   shutdownStreak: 3,
@@ -64,7 +64,10 @@ export function zoneOf(position: Vec3): string {
       bestDistance = distance;
     }
   }
-  const stripped = best.name.replace(/^\s*\d+\s*\/\s*/, '').trim().toUpperCase();
+  const stripped = best.name
+    .replace(/^\s*\d+\s*\/\s*/, '')
+    .trim()
+    .toUpperCase();
   return zoneLabels[stripped] ?? stripped.toLowerCase();
 }
 
@@ -263,12 +266,7 @@ export class EventDetector {
     });
   }
 
-  private trackMovement(
-    player: Player,
-    players: Player[],
-    now: number,
-    events: CommentaryEvent[],
-  ) {
+  private trackMovement(player: Player, players: Player[], now: number, events: CommentaryEvent[]) {
     const state = this.stateFor(player, now);
     const moved =
       Math.hypot(player.position.x - state.x, player.position.z - state.z) >=

@@ -1,8 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import {
-  Check,
-  Copy,
   Crosshair,
   LogOut,
   Maximize,
@@ -53,8 +51,7 @@ export function HUD() {
     remaining = Math.max(0, Math.ceil(((snap?.endsAt || now) - now) / 1000)),
     dead = me?.hp === 0,
     finished = false,
-    captionLive =
-      s.casterOn && !!s.caption.text && Date.now() - s.caption.at < 6000;
+    captionLive = s.casterOn && !!s.caption.text && Date.now() - s.caption.at < 6000;
   const sorted = [...(snap?.players || [])].sort(
     (a, b) => b.score - a.score || a.deaths - b.deaths,
   );
@@ -127,7 +124,9 @@ export function HUD() {
             <div key={f.id}>
               <b style={{ color: f.color }}>{f.killer}</b>
               <Crosshair size={13} />
-              {isWeaponId(f.weapon) && <small style={{ color: WEAPONS[f.weapon].color }}>{WEAPONS[f.weapon].label}</small>}
+              {isWeaponId(f.weapon) && (
+                <small style={{ color: WEAPONS[f.weapon].color }}>{WEAPONS[f.weapon].label}</small>
+              )}
               <span>{f.victim}</span>
             </div>
           ))}
@@ -161,11 +160,18 @@ export function HUD() {
       <div className="hud-bottom">
         <div className="player-status">
           <div className="player-avatar">
-            <span className="pet-preview" style={{ backgroundImage: `url(${PETS[isPetId(me?.pet) ? me.pet : s.selectedPet].sprite})` }} />
+            <span
+              className="pet-preview"
+              style={{
+                backgroundImage: `url(${PETS[isPetId(me?.pet) ? me.pet : s.selectedPet].sprite})`,
+              }}
+            />
           </div>
           <div>
             <span className="callsign">{me?.name || 'ROOKIE'}</span>
-            <small className="character-readout">PLAYING AS {PETS[isPetId(me?.pet) ? me.pet : s.selectedPet].name.toUpperCase()}</small>
+            <small className="character-readout">
+              PLAYING AS {PETS[isPetId(me?.pet) ? me.pet : s.selectedPet].name.toUpperCase()}
+            </small>
             <div className="health-pips">
               {[1, 2, 3].map((n) => (
                 <i key={n} className={(me?.hp || 0) >= n ? 'full' : ''} />
@@ -194,7 +200,6 @@ export function HUD() {
             <kbd>TAB</kbd>SCORES
           </button>
         </div>
-
       </div>
       <WeaponHUD />
       <MobileControls />

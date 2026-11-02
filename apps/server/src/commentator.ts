@@ -88,10 +88,7 @@ export class Commentator {
     }
     if (!this.caster) {
       this.startSession(now, players.length);
-    } else if (
-      now - this.sessionStartedAt >= this.config.sessionMs &&
-      !this.director.busy(now)
-    ) {
+    } else if (now - this.sessionStartedAt >= this.config.sessionMs && !this.director.busy(now)) {
       this.caster.stop();
       this.caster = null;
       this.director.reset();
@@ -160,7 +157,8 @@ export class Commentator {
     this.sessionStartedAt = now;
     this.openingDone = false;
     const create =
-      this.options.createCaster ?? ((options: DeepgramCasterOptions) => new DeepgramCaster(options));
+      this.options.createCaster ??
+      ((options: DeepgramCasterOptions) => new DeepgramCaster(options));
     const caster = create({
       apiKey: this.config.apiKey,
       model: this.config.model,

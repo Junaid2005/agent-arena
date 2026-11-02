@@ -49,7 +49,14 @@ export type Shot = {
   pet?: import('./pets.ts').PetId;
   at: number;
 };
-export type Feed = { id: string; killer: string; victim: string; color: string; weapon?: import('./weapons.ts').WeaponId; at: number };
+export type Feed = {
+  id: string;
+  killer: string;
+  victim: string;
+  color: string;
+  weapon?: import('./weapons.ts').WeaponId;
+  at: number;
+};
 export type Snapshot = {
   room: string;
   players: Player[];

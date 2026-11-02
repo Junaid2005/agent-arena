@@ -85,7 +85,10 @@ function World() {
       <Arena />
       <CameraRig />
       {screen === 'lobby' ? (
-        <Character player={{ ...showcase, pet: selectedPet, color: PETS[selectedPet].color }} lobby />
+        <Character
+          player={{ ...showcase, pet: selectedPet, color: PETS[selectedPet].color }}
+          lobby
+        />
       ) : (
         snapshot?.players.map((p) => <Character key={p.id} player={p} local={p.id === id} />)
       )}

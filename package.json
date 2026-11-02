@@ -11,21 +11,35 @@
     "typecheck": "tsc --noEmit -p apps/server && tsc --noEmit -p apps/web",
     "test": "tsx --test apps/server/src/*.test.ts apps/web/lib/*.test.ts",
     "test:network": "tsx scripts/network-test.ts",
-    "test:distributed": "tsx --test apps/server/src/redis-game.integration.ts",
-    "test:vercel": "tsx scripts/vercel-network-test.ts"
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm run deadcode && npm run typecheck && npm test",
+    "audit": "npm audit --audit-level=moderate",
+    "deadcode": "knip",
+    "test:integration": "tsx scripts/integration-test.ts",
+    "security:secrets": "bash scripts/scan-secrets.sh"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.0.0",
-    "@types/ws": "^8.18.1",
     "concurrently": "^9.0.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "knip": "^6.44.1",
+    "prettier": "^3.9.10",
+    "socket.io-client": "^4.8.1",
     "tsx": "^4.20.0",
-    "typescript": "^5.9.0"
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.72.1"
   },
   "overrides": {
     "shell-quote": "1.12.0",
     "scheduler": "0.27.0",
     "source-map-js": "1.2.2",
-    "zod": "4.6.7"
+    "minimatch": "11.0.3"
   },
   "type": "module",
   "dependencies": {

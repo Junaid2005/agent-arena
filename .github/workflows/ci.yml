@@ -16,29 +16,43 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6387:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
           cache: npm
       - name: Install dependencies
         run: npm ci --ignore-scripts
+      - name: Lint source
+        run: npm run lint
+      - name: Check formatting
+        run: npm run format:check
+      - name: Check unused code and dependencies
+        run: npm run deadcode
+      - name: Audit dependencies
+        run: npm run audit
+      - name: Scan Git history for secrets
+        run: bash scripts/scan-secrets.sh
+      - name: Check deployment scripts
+        run: shellcheck scripts/*.sh
       - name: Type check web and server
         run: npm run typecheck
       - name: Test simulation and combat
         run: npm test
-      - name: Test shared multiplayer and instance turnover
-        run: npm run test:distributed
+      - name: Test multiplayer and security boundaries
+        run: npm run test:integration
       - name: Build production frontend
         run: npm run build
+
+  container-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build the actual production runtime
+        run: docker build -f apps/server/Dockerfile -t agent-arena-security .
+      - name: Scan runtime for vulnerabilities
+        run: bash scripts/scan-image.sh agent-arena-security

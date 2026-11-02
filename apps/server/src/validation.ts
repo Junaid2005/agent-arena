@@ -21,10 +21,7 @@ export function cleanName(v: unknown) {
   return typeof v === 'string'
     ? v
         .trim()
-        .replace(/[<>\x00-\x1f]/g, '')
+        .replace(/[<>\p{Cc}]/gu, '')
         .slice(0, 18)
     : '';
-}
-export function cleanRoom(v: unknown) {
-  return typeof v === 'string' && /^[A-Z0-9]{4,6}$/.test(v.toUpperCase()) ? v.toUpperCase() : null;
 }

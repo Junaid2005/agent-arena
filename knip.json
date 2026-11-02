@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreDependencies": ["next"],
+  "workspaces": {
+    "apps/server": {
+      "entry": ["src/**/*.test.ts", "src/security.integration.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "apps/web": {
+      "entry": ["lib/**/*.test.ts"]
+    }
+  }
+}
