@@ -9,7 +9,10 @@ import { simulate } from './simulation.ts';
 import { validateInput } from './validation.ts';
 import { planToWorld } from '../../../packages/shared/src/venue.ts';
 import { circleBoxOverlap } from '../../../packages/shared/src/geometry.ts';
-function at(x: number, z: number) { const p = planToWorld([x, z]); return { x: p[0], y: 0, z: p[1] }; }
+function at(x: number, z: number) {
+  const p = planToWorld([x, z]);
+  return { x: p[0], y: 0, z: p[1] };
+}
 const time = 10000;
 function member(index = 0): Member {
   return {
@@ -52,14 +55,19 @@ test('authoritative movement has fixed speed, floor, jump, boundaries and solid 
   assert.equal(p.grounded, true);
   p.position = at(680, 450);
   for (let i = 0; i < 200; i++) movePlayer(p, { ...idleInput(), x: -1 }, DT, time + i * 40);
-  assert.ok(p.position.x > planToWorld([650, 450])[0], 'cannot penetrate the Boat Space / Atrium divider');
+  assert.ok(
+    p.position.x > planToWorld([650, 450])[0],
+    'cannot penetrate the Boat Space / Atrium divider',
+  );
 });
 test('every spawn is outside solid geometry and supports the player', () => {
   SPAWNS.forEach(([x, y, z], index) => {
     for (const b of ARENA) {
       if (b.kind === 'ramp') continue;
-      const inside = circleBoxOverlap({ x, y, z }, RADIUS, b) &&
-        y < b.position[1] + b.size[1] / 2 - 0.01 && y + 1.7 > b.position[1] - b.size[1] / 2;
+      const inside =
+        circleBoxOverlap({ x, y, z }, RADIUS, b) &&
+        y < b.position[1] + b.size[1] / 2 - 0.01 &&
+        y + 1.7 > b.position[1] - b.size[1] / 2;
       assert.ok(!inside, `spawn ${index} inside ${b.id}`);
     }
   });
@@ -110,7 +118,9 @@ test('walls occlude hits and cooldown blocks excessive shooting', () => {
   );
 });
 test('pet characters do not shoot without player input', () => {
-  const r = createRoom(time), a = member(), b = member(1);
+  const r = createRoom(time),
+    a = member(),
+    b = member(1);
   a.player.pet = 'fireball';
   b.player.pet = 'dewey';
   a.player.position = at(830, 450);

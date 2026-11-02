@@ -37,12 +37,19 @@ import { ENTRANCE_DOOR_SOLIDS, ENTRANCE_FURNITURE_SOLIDS } from './entranceFoyer
 // Architecture is rendered separately from the photo-informed event fixtures.
 export const ARCHITECTURE: Box[] = [...VENUE_WALLS, ...VENUE_SOLIDS];
 export const ARENA: Box[] = [
-  ...ARCHITECTURE.filter(visibleInCurrentEvent), ...registeredStageSolids(),
-  ...TIMBER_BAY_COLLIDERS, ...ENTRANCE_DOOR_SOLIDS,
-  ...FURNITURE_SOLIDS, ...ROOM_FIVE_FURNITURE_SOLIDS, ...ROOM_THREE_FURNITURE_SOLIDS,
-  ...ROOM_ELEVEN_FURNITURE_SOLIDS, ...ENTRANCE_FURNITURE_SOLIDS,
+  ...ARCHITECTURE.filter(visibleInCurrentEvent),
+  ...registeredStageSolids(),
+  ...TIMBER_BAY_COLLIDERS,
+  ...ENTRANCE_DOOR_SOLIDS,
+  ...FURNITURE_SOLIDS,
+  ...ROOM_FIVE_FURNITURE_SOLIDS,
+  ...ROOM_THREE_FURNITURE_SOLIDS,
+  ...ROOM_ELEVEN_FURNITURE_SOLIDS,
+  ...ENTRANCE_FURNITURE_SOLIDS,
 ];
-export const ZONES = VENUE_ROOMS.filter((r) => r.access !== 'private' && r.access !== 'storage' && r.id !== 'vestibule').map((r) => {
+export const ZONES = VENUE_ROOMS.filter(
+  (r) => r.access !== 'private' && r.access !== 'storage' && r.id !== 'vestibule',
+).map((r) => {
   const [x, z] = planToWorld(r.label);
   return { name: r.name, x, z, color: '#344952' };
 });

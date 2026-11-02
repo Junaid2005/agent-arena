@@ -84,10 +84,35 @@ try {
   console.log('PASS: all nine pet selections are distinct and visible in the shared arena');
   // Navigate through the venue using only input commands, never position writes.
   const visit = async (client: typeof a, x: number, z: number) => {
-    const [wx, wz] = planToWorld([x, z]); await navigate(client, wx, wz);
+    const [wx, wz] = planToWorld([x, z]);
+    await navigate(client, wx, wz);
   };
   await visit(a, 840, 706);
-  for (const [x, z] of [[463, 525], [463, 520], [544, 520], [544, 550], [549, 550], [549, 560], [554, 560], [554, 565], [624, 565], [624, 610], [629, 610], [629, 676], [634, 676], [634, 681], [785, 681], [785, 686], [795, 686], [795, 691], [810, 691], [810, 696], [840, 696], [840, 706]]) await visit(b, x, z);
+  for (const [x, z] of [
+    [463, 525],
+    [463, 520],
+    [544, 520],
+    [544, 550],
+    [549, 550],
+    [549, 560],
+    [554, 560],
+    [554, 565],
+    [624, 565],
+    [624, 610],
+    [629, 610],
+    [629, 676],
+    [634, 676],
+    [634, 681],
+    [785, 681],
+    [785, 686],
+    [795, 686],
+    [795, 691],
+    [810, 691],
+    [810, 696],
+    [840, 696],
+    [840, 706],
+  ])
+    await visit(b, x, z);
   const [ax] = planToWorld([840, 706]);
   const [, bz] = planToWorld([840, 665]);
   await navigate(b, ax + 0.65, bz);
@@ -99,7 +124,10 @@ try {
   const originalWeapon = snapshots.get(a.s.id!)!.players.find((p) => p.id === a.id)!.weapon;
   const victimWeapon = before.weapon;
   const shootUntil = Date.now() + 5000;
-  while (Date.now() < shootUntil && snapshots.get(b.s.id!)!.players.find((p) => p.id === b.id)!.hp > 0) {
+  while (
+    Date.now() < shootUntil &&
+    snapshots.get(b.s.id!)!.players.find((p) => p.id === b.id)!.hp > 0
+  ) {
     command(a.s, { fire: true });
     await pause(40);
   }
@@ -143,7 +171,10 @@ try {
   await pause(150);
   const rejoined = await connect('Bob', a.room, saved.token, 'rocky');
   assert.equal(rejoined.id, saved.id);
-  assert.equal(snapshots.get(rejoined.s.id!)!.players.find((p) => p.id === b.id)!.weapon, victimWeapon);
+  assert.equal(
+    snapshots.get(rejoined.s.id!)!.players.find((p) => p.id === b.id)!.weapon,
+    victimWeapon,
+  );
   const takeover = await connect('Bob', a.room, saved.token, 'rocky');
   assert.equal(takeover.id, saved.id);
   await pause(100);

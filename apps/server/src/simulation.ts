@@ -12,8 +12,15 @@ export function simulate(room: Room, now: number): Shot[] {
     for (const victimId of shot.kills || []) {
       const victim = players.find((q) => q.id === victimId);
       const owner = room.members.get(shot.shooter)?.player;
-      if (victim && owner) room.feed.unshift({ id: `${shot.id}:${victimId}`, killer: owner.name,
-        victim: victim.name, color: shot.color, weapon: shot.weapon, at: now });
+      if (victim && owner)
+        room.feed.unshift({
+          id: `${shot.id}:${victimId}`,
+          killer: owner.name,
+          victim: victim.name,
+          color: shot.color,
+          weapon: shot.weapon,
+          at: now,
+        });
     }
     room.feed = room.feed.slice(0, 5);
   };

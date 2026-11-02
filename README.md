@@ -19,16 +19,16 @@ The arena requires a live server connection; there is no offline mode.
 
 Everyone starts with a random weapon. Each server-confirmed elimination immediately rolls a different gun from the eight-weapon arsenal. Hits do not reroll; death, respawn and reconnect keep your current gun. Hold FIRE with any weapon; ammo is unlimited. The HUD shows a matching weapon silhouette and ammunition icon, cadence, range and handling tip, and announces each kill swap. Held guns use compact low-poly models; bullets have copper tips and distinct sizes, shotgun pellets trail colourful confetti, lasers have energy cores, rockets have fins and exhaust, and the fart cannon emits expanding gas puffs. Bullet travel effects are cosmetic; hitscan damage and rocket flight remain server-authoritative.
 
-| Weapon | How it plays |
-| --- | --- |
-| Pocket Pistol | Accurate three-tap, 280 ms between shots |
-| Paintstorm AR | Automatic fire, slight spread, 160 ms cadence |
-| Pocket Shredder SMG | 80 ms cadence, wider spread, 24 m range |
-| Big Peep Sniper | Accurate one-shot, 1.3 second cooldown |
-| Party Crasher RPG | Rockets travel at 20 m/s; 4 m splash, lethal within 2 m |
-| Disco Laser | Accurate beams every 120 ms |
-| Silent But Deadly | Two-damage, 6 m forward stink cone every 650 ms |
-| Confetti Catastrophe | Seven pellets every 800 ms, each deals one damage |
+| Weapon               | How it plays                                            |
+| -------------------- | ------------------------------------------------------- |
+| Pocket Pistol        | Accurate three-tap, 280 ms between shots                |
+| Paintstorm AR        | Automatic fire, slight spread, 160 ms cadence           |
+| Pocket Shredder SMG  | 80 ms cadence, wider spread, 24 m range                 |
+| Big Peep Sniper      | Accurate one-shot, 1.3 second cooldown                  |
+| Party Crasher RPG    | Rockets travel at 20 m/s; 4 m splash, lethal within 2 m |
+| Disco Laser          | Accurate beams every 120 ms                             |
+| Silent But Deadly    | Two-damage, 6 m forward stink cone every 650 ms         |
+| Confetti Catastrophe | Seven pellets every 800 ms, each deals one damage       |
 
 Rockets explode at their traced impact point after flight time, giving targets time to move. Splash and fart cones respect cover and spawn protection, can hit several opponents, and spare their shooter. Each victim earns one score and one roll. All live damage, random assignments and kill rolls are server-owned; the browser only sends controls. The frontend and multiplayer authority must use the same weapon protocol.
 
@@ -50,9 +50,10 @@ npm run dev
 Open http://localhost:3000. A separate Socket.IO server runs on port 3001. Multiple local browser tabs join the same local arena. Copy `.env.example` to `apps/web/.env.local` to override the server URL or load an optional venue GLB. Set server variables in the server process environment.
 
 ```sh
-npm run typecheck
-npm test
-npm run test:network
+npm run check
+npm run test:integration
+npm run audit
+npm run security:secrets
 npm run build
 ```
 
@@ -79,33 +80,19 @@ Playable characters are camera-facing animated pet sprites using the built-in 8-
 
 ## Venue
 
-The arena now uses PR #13's Hoxton Docks floor plan: a human-scale, photo-informed reconstruction with the high bay, main hall and event stage, Canal Room, Atrium, entrance, courtyard, yard and parking. One unit is one metre at the drawing's published 1:200/A3 calibration. Exact placement, heights and unmeasured details remain estimates; this is not a surveyed digital twin.
-
-The game stays at `/`, with playable pets, matching weapon/ammunition art and Vercel/Redis multiplayer. `/paintball` redirects to the game. `/venue` provides a top-down/orbit review with the source plan overlay; `/tour` preserves the standalone walk-through supplied by the map author. Neither review route changes the game's live-server requirement or restores practice mode.
-
-Architecture, event furniture, open entrance leaves, stage and locked-room panels share rotated collision boxes across Rapier, authoritative movement, camera clearance and hitscan. Diving uses substeps to prevent tunnelling through thin partitions. Rooms 4, 7, 8 and 10 remain locked; all twelve spawns are in public areas clear of furniture. The map and backend geometry must be deployed together, and existing Redis arena state must use a fresh map-version namespace to avoid resuming old positions.
-
-The source plan is served at `/venue/hoxton-ground-floor.webp`. See [geometry notes](docs/venue-geometry.md) and [map MVP notes](docs/venue-mvp.md) for calibration, photo-supported details and remaining limits. The original 311 MB video stays excluded from uploads; no automated photogrammetry is claimed.
-
-`NEXT_PUBLIC_VENUE_URL` optionally overlays a GLB; scale and Y rotation are configurable. Align manually defined authoritative colliders with imported geometry. Use a CORS-enabled asset host.
+The current playable map and tour recreate Hoxton Docks from the supplied floor plan and photo survey. Geometry, registration and known approximations are documented in [docs/venue-geometry.md](docs/venue-geometry.md). The active plan is `/venue/hoxton-ground-floor.webp`. Collision rules and rendering share the same geometry; source video stays local and is excluded from Git and deployment uploads.
 
 ## Outstanding work
 
-**Photo-generated avatars are not enabled.** No completed generated photo mesh or successful provider call is claimed. Gameplay currently uses pet sprites. Photo meshes, trusted asset registration, upload UI, provider calls and storage would require a separate implementation and end-to-end testing.
-
-Provider research (1 November 2026): [Meshy image-to-3D](https://docs.meshy.ai/en/api/image-to-3d) supports textured GLB, A-pose, 2K textures and target polygon count. [Rigging](https://docs.meshy.ai/en/api/rigging) supports clearly defined textured humanoids and optional basic walk/run outputs. Meshy models face +Z; this game faces −Z, so an orientation adapter is needed. [Pricing](https://docs.meshy.ai/en/api/pricing) lists 30 credits for Meshy 7.1 generation with 2K textures and 5 for automatic rigging; extra animation actions cost extra. Generation latency and skeleton compatibility have not been measured in this project.
-
-Required: a server-only provider key with credits, S3/R2 credentials, public CORS-enabled asset storage, validated photo upload and confirmation, genuine progress polling, durable GLBs, generation-ID caching, rigging/animation integration, error/retry handling and default-avatar fallback. Do not persist expiring provider URLs as permanent avatar assets. Keep the game playable during generation.
-
-Full ragdoll simulation and spectator mode are also pending. The final two-human test on physical devices has not been performed by the agent; automated browser checks do not replace that test.
+Photo-to-3D uploads and generated humanoid avatars are not implemented. Current selectable pets use animated sprites. Full simulated ragdolls and spectator mode are also pending. Two people on physical devices still need to perform the final acceptance test; automated checks do not replace it.
 
 ## Automatic deployment and checks
 
-Vercel is connected to `Junaid2005/codex-paintabll` through its GitHub app, with automatic Git deployments enabled and Node 24 configured. The production branch is `feat/ghost-arena` (the repository’s default branch). Pushes and merged PRs to that branch publish to https://agent-arena-paintball.vercel.app; other branches receive previews. Manage the connection in [Vercel Git settings](https://vercel.com/junaid2005s-projects/ghost-arena/settings/git). No Vercel token is stored in GitHub.
+Vercel is connected to `Junaid2005/agent-arena` through its GitHub app, with automatic Git deployments enabled and Node 24 configured. The production branch is `feat/ghost-arena` (the repository’s default branch). Pushes and merged PRs to that branch publish to https://agent-arena-paintball.vercel.app; other branches receive previews. Manage the connection in [Vercel Git settings](https://vercel.com/junaid2005s-projects/ghost-arena/settings/git). No Vercel token is stored in GitHub.
 
 `.github/workflows/ci.yml` runs type checking, simulation/combat tests and a production build on pushes and pull requests. Vercel’s native build and this CI check run independently; branch protection can require the CI check before merging. Fork deployment authorization remains managed by Vercel.
 
-Production frontend deploys on Vercel; deploy server-side gameplay updates to the VPS separately. CI also exercises two separate WebSocket servers against Redis, including owner retirement and eight clients.
+Production frontend deploys on Vercel; deploy server-side gameplay updates to the VPS separately. CI starts isolated Node servers for multiplayer and security integration checks.
 
 ## Deployment
 
@@ -126,4 +113,12 @@ Vercel Git deployment updates the frontend automatically. Server-side changes re
 TEST_SERVER_URL=https://ghost-arena.162.19.137.169.sslip.io TEST_ORIGIN=https://agent-arena-paintball.vercel.app npm run test:network
 ```
 
-This network fixture creates nine clients and checks shared movement, combat, score, weapons, respawn, input validation and reconnects; run on an empty test arena. The older Redis implementation and distributed fixtures remain available for reference, but are not used by production. Avoid committing credentials, `.env` files or source video.
+This network fixture creates nine clients and checks shared movement, combat, score, weapons, respawn, input validation and reconnects; run on an empty test arena. Avoid committing credentials, `.env` files or source video.
+
+## Maintenance and security
+
+`npm run lint` checks TypeScript and React hooks; `npm run format` applies the shared Prettier rules. `npm run deadcode` checks for unused files, exports and dependencies. Run `npm run check`, `npm run test:integration` and `npm run build` before a PR. Integration tests start fresh local servers with commentary disabled and never touch the public arena.
+
+CI checks the same rules, Bash scripts, dependency vulnerabilities, Git-history secrets and the production container. Dependency/container/action updates are proposed weekly by Dependabot. GitHub Actions and container bases are pinned; scanner downloads have pinned SHA-256 checksums. The targeted audit and its limits are recorded in [docs/security-audit.md](docs/security-audit.md).
+
+The production runtime contains no shell, npm, yarn, apk, test fixtures or development dependencies. It installs application packages from the committed lockfile. The container is non-root and read-only, with bounded memory, CPU, processes, file descriptors and log rotation. Keep backend secrets only in the VPS's mode-600 environment file. Deployment needs `rsync`, SSH, Docker, Python and curl on the configured host.

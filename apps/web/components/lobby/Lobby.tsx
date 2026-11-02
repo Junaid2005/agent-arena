@@ -24,7 +24,9 @@ export function Lobby() {
   return (
     <div className="lobby simple-lobby">
       <section className="hero" aria-labelledby="arena-title">
-        <h1 id="arena-title">AGENT <span>ARENA</span></h1>
+        <h1 id="arena-title">
+          AGENT <span>ARENA</span>
+        </h1>
         <form
           className="join-card"
           onSubmit={(e) => {
@@ -58,7 +60,10 @@ export function Lobby() {
                   onClick={() => setPet(id)}
                   aria-pressed={pet === id}
                 >
-                  <span className="pet-preview" style={{ backgroundImage: `url(${item.sprite})` }} />
+                  <span
+                    className="pet-preview"
+                    style={{ backgroundImage: `url(${item.sprite})` }}
+                  />
                   <strong>{item.name}</strong>
                 </button>
               ))}
@@ -83,9 +88,15 @@ export function Lobby() {
             )}
           </button>
         </form>
-        <div className="pet-poster" aria-hidden="true" style={{ backgroundImage: `url(${PETS[pet].sprite})` }} />
+        <div
+          className="pet-poster"
+          aria-hidden="true"
+          style={{ backgroundImage: `url(${PETS[pet].sprite})` }}
+        />
       </section>
-      <footer className="venue-name"><a href="/venue">HOXTON DOCKS / DEV DAY EXCHANGE ↗</a></footer>
+      <footer className="venue-name">
+        <a href="/venue">HOXTON DOCKS / DEV DAY EXCHANGE ↗</a>
+      </footer>
     </div>
   );
 }

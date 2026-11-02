@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import type { Player, Shot, Vec3 } from '../../../packages/shared/src/types.ts';
 import { newPlayer } from './players.ts';
 import { planToWorld } from '../../../packages/shared/src/venue.ts';
-const at = (x: number, z: number): Vec3 => { const [wx, wz] = planToWorld([x, z]); return { x: wx, y: 0, z: wz }; };
+const at = (x: number, z: number): Vec3 => {
+  const [wx, wz] = planToWorld([x, z]);
+  return { x: wx, y: 0, z: wz };
+};
 import {
   CASTER_PROMPT,
   CommentaryDirector,
@@ -108,11 +111,7 @@ test('revenge replaces a plain kill', () => {
   const detector = new EventDetector();
   const alice = player('0', 'Alice');
   const bob = player('1', 'Bob');
-  detector.observe(
-    [alice, bob],
-    [shot({ shooter: alice.id, hit: bob.id, killed: true })],
-    base,
-  );
+  detector.observe([alice, bob], [shot({ shooter: alice.id, hit: bob.id, killed: true })], base);
   alice.hp = 0;
   const events = detector.observe(
     [alice, bob],
@@ -160,7 +159,10 @@ test('camping fires once and respects the twenty second cooldown', () => {
   const first = detector.observe([camper, other], [], base + 15_000);
   assert.ok(first.some((e) => e.kind === 'camping' && /camping/.test(e.text)));
   const tooSoon = detector.observe([camper, other], [], base + 16_000);
-  assert.equal(tooSoon.some((e) => e.kind === 'camping'), false);
+  assert.equal(
+    tooSoon.some((e) => e.kind === 'camping'),
+    false,
+  );
   const later = detector.observe([camper, other], [], base + 35_000);
   assert.ok(later.some((e) => e.kind === 'camping'));
 });
@@ -198,7 +200,10 @@ test('a sole leader emerging from a tie is a lead change', () => {
   alice.score = 1;
   bob.score = 1;
   const seed = detector.observe([alice, bob], [], base);
-  assert.equal(seed.some((e) => e.kind === 'lead_change'), false);
+  assert.equal(
+    seed.some((e) => e.kind === 'lead_change'),
+    false,
+  );
   alice.score = 2;
   const events = detector.observe([alice, bob], [], base + 100);
   const lead = events.find((e) => e.kind === 'lead_change');
@@ -357,7 +362,10 @@ test('caster sends settings with the right audio shape and waits for SettingsApp
   assert.equal(audio.output.container, 'none');
 
   caster.inject('hello');
-  assert.equal(socket.json().some((m) => m.type === 'InjectUserMessage'), false);
+  assert.equal(
+    socket.json().some((m) => m.type === 'InjectUserMessage'),
+    false,
+  );
   socket.emit('message', JSON.stringify({ type: 'SettingsApplied' }));
   assert.equal(caster.ready, true);
   const injected = socket.json().find((m) => m.type === 'InjectUserMessage');
@@ -376,13 +384,22 @@ test('caster realigns odd audio bytes and caps chunk size', () => {
   socket.emit('message', JSON.stringify({ type: 'SettingsApplied' }));
   socket.emit('message', Buffer.from([1, 2, 3]));
   socket.emit('message', Buffer.from([4, 5, 6]));
-  assert.deepEqual(audio.map((chunk) => chunk.length), [2, 4]);
+  assert.deepEqual(
+    audio.map((chunk) => chunk.length),
+    [2, 4],
+  );
   assert.deepEqual([...audio[0]], [1, 2]);
   assert.deepEqual([...audio[1]], [3, 4, 5, 6]);
   socket.emit('message', Buffer.alloc(8_001, 7));
-  assert.deepEqual(audio.slice(2).map((chunk) => chunk.length), [8_000]);
+  assert.deepEqual(
+    audio.slice(2).map((chunk) => chunk.length),
+    [8_000],
+  );
   socket.emit('message', Buffer.from([9]));
-  assert.deepEqual(audio.slice(2).map((chunk) => chunk.length), [8_000, 2]);
+  assert.deepEqual(
+    audio.slice(2).map((chunk) => chunk.length),
+    [8_000, 2],
+  );
   assert.deepEqual([...audio[3]], [7, 9]);
   caster.stop();
 });
@@ -485,23 +502,52 @@ test('commentator opens on activity, casts an opening line, and closes after idl
 
 test('rocket launches are not whiffs and only the impact announces the kill', () => {
   const detector = new EventDetector();
-  const killer = player('0', 'Alice'), victim = player('1', 'Bob');
-  const launches = Array.from({ length: 8 }, () => shot({ shooter: killer.id, weapon: 'rpg', travelMs: 1000, kills: [] }));
+  const killer = player('0', 'Alice'),
+    victim = player('1', 'Bob');
+  const launches = Array.from({ length: 8 }, () =>
+    shot({ shooter: killer.id, weapon: 'rpg', travelMs: 1000, kills: [] }),
+  );
   const events = detector.observe([killer, victim], launches, base);
   assert.ok(!events.some((e) => e.kind === 'whiff_spree' || e.kind === 'first_blood'));
   victim.hp = 0;
-  const impact = detector.observe([killer, victim], [shot({ shooter: killer.id, weapon: 'rpg', impact: true,
-    hit: victim.id, killed: true, kills: [victim.id] })], base + 1000);
+  const impact = detector.observe(
+    [killer, victim],
+    [
+      shot({
+        shooter: killer.id,
+        weapon: 'rpg',
+        impact: true,
+        hit: victim.id,
+        killed: true,
+        kills: [victim.id],
+      }),
+    ],
+    base + 1000,
+  );
   assert.ok(impact.some((e) => e.kind === 'first_blood' && /Bob/.test(e.text)));
 });
 
 test('one blast announces every killed victim, including kills beyond the first hit', () => {
   const detector = new EventDetector();
-  const killer = player('0', 'Alice'), survivor = player('1', 'Survivor'),
-    first = player('2', 'Bob'), second = player('3', 'Charlie');
+  const killer = player('0', 'Alice'),
+    survivor = player('1', 'Survivor'),
+    first = player('2', 'Bob'),
+    second = player('3', 'Charlie');
   first.hp = second.hp = 0;
-  const events = detector.observe([killer, survivor, first, second], [shot({ shooter: killer.id,
-    weapon: 'rpg', impact: true, hit: survivor.id, killed: true, kills: [first.id, second.id] })], base);
+  const events = detector.observe(
+    [killer, survivor, first, second],
+    [
+      shot({
+        shooter: killer.id,
+        weapon: 'rpg',
+        impact: true,
+        hit: survivor.id,
+        killed: true,
+        kills: [first.id, second.id],
+      }),
+    ],
+    base,
+  );
   assert.ok(events.some((e) => e.kind === 'first_blood' && /Bob/.test(e.text)));
   assert.ok(events.some((e) => e.kind === 'multi_kill' && /Charlie/.test(e.text)));
   assert.ok(!events.some((e) => /eliminated Survivor/.test(e.text)));

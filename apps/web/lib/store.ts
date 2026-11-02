@@ -25,7 +25,7 @@ export const runtime: {
   seq: number;
   clockOffset: number;
 } = { local: null, pending: [], seq: 0, clockOffset: 0 };
-export const serverUrl =
+const serverUrl =
   process.env.NEXT_PUBLIC_SERVER_URL ||
   (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3001');
 let socket: ArenaConnection | null = null;

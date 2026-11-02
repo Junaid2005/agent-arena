@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-02",
+  "scope": "Agent Arena repository and game container on VPS only",
+  "scanner": "Grype 0.121.0",
+  "before": {
+    "matches": 22,
+    "bySeverity": {
+      "High": 6,
+      "Medium": 15,
+      "Low": 1
+    }
+  },
+  "after": {
+    "matches": 0
+  },
+  "secretScanner": "Gitleaks 8.30.1",
+  "gitHistorySecretFindings": 0,
+  "npmAuditFindings": 0,
+  "unitTests": 67,
+  "securityIntegrationTests": 4,
+  "networkFixtureClients": 9
+}

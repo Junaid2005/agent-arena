@@ -13,13 +13,17 @@ import { cleanName, validateInput } from './validation.ts';
 import { newPlayer } from './players.ts';
 import { simulate } from './simulation.ts';
 import { isPetId } from '../../../packages/shared/src/pets.ts';
+import { clientAddress, ConnectionLimits } from './security.ts';
 import { Commentator } from './commentator.ts';
 
 const origins = (process.env.CORS_ORIGIN || 'http://localhost:3000,http://127.0.0.1:3000')
   .split(',')
   .map((s) => s.trim());
 const allowed = (origin: string | undefined) => !origin || origins.includes(origin);
-const http = createServer((req, res) => {
+const http = createServer({ maxHeaderSize: 8192 }, (req, res) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   const origin = req.headers.origin;
   if (origin && allowed(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -47,12 +51,26 @@ const http = createServer((req, res) => {
   res.writeHead(404);
   res.end(JSON.stringify({ error: 'Not found' }));
 });
+http.headersTimeout = 10_000;
+http.requestTimeout = 15_000;
+const limits = new ConnectionLimits();
 const io = new Server<ClientEvents, ServerEvents>(http, {
   cors: { origin: (origin, cb) => cb(null, allowed(origin)), methods: ['GET', 'POST'] },
-  allowRequest: (req, cb) => cb(null, allowed(req.headers.origin)),
+  allowRequest: (req, cb) =>
+    cb(
+      null,
+      allowed(req.headers.origin) && limits.allow(clientAddress(req), io.engine.clientsCount),
+    ),
+  connectTimeout: 10_000,
+  serveClient: false,
   maxHttpBufferSize: 16384,
   pingTimeout: 25000,
   pingInterval: 10000,
+});
+io.engine.on('connection', (connection) => {
+  const ip = clientAddress(connection.request);
+  limits.opened(ip);
+  connection.once('close', () => limits.closed(ip));
 });
 const liveRoom = publicRoom(Date.now());
 const commentator = new Commentator({
@@ -63,13 +81,14 @@ const commentator = new Commentator({
 const sessions = new Map<string, { room: Room; member: Member }>();
 const joins = new Map<string, { start: number; count: number }>();
 io.on('connection', (socket) => {
+  const joinDeadline = setTimeout(() => socket.disconnect(true), 10_000);
   socket.on('join', (raw: JoinRequest, reply: (r: JoinReply) => void) => {
     if (typeof reply !== 'function') return;
     if (sessions.has(socket.id)) {
       reply({ ok: false, error: 'Already joined.' });
       return;
     }
-    const ip = socket.handshake.address,
+    const ip = clientAddress(socket.request),
       now = Date.now();
     let rate = joins.get(ip);
     if (!rate || now - rate.start > 60000) {
@@ -82,6 +101,13 @@ io.on('connection', (socket) => {
     }
     if (!raw || typeof raw !== 'object') {
       reply({ ok: false, error: 'Invalid join request.' });
+      return;
+    }
+    if (
+      raw.token !== undefined &&
+      (typeof raw.token !== 'string' || !/^[a-f0-9]{48}$/.test(raw.token))
+    ) {
+      reply({ ok: false, error: 'Invalid session token.' });
       return;
     }
     const name = cleanName(raw.name);
@@ -122,6 +148,7 @@ io.on('connection', (socket) => {
       member.lastInputAt = now;
     }
     if (isPetId(raw.pet)) member.player.pet = raw.pet;
+    clearTimeout(joinDeadline);
     sessions.set(socket.id, { room, member });
     socket.join(room.code);
     reply({ ok: true, id: member.player.id, token: member.token, snapshot: snapshot(room, now) });
@@ -148,6 +175,7 @@ io.on('connection', (socket) => {
     };
   });
   socket.on('disconnect', () => {
+    clearTimeout(joinDeadline);
     const s = sessions.get(socket.id);
     if (s) {
       s.member.socketId = null;
@@ -172,9 +200,7 @@ const tick = setInterval(() => {
     const shots = simulate(room, now);
     for (const shot of shots) io.to(code).emit('shot', shot);
     if (code === liveRoom.code) {
-      const players = [...room.members.values()]
-        .filter((m) => m.socketId)
-        .map((m) => m.player);
+      const players = [...room.members.values()].filter((m) => m.socketId).map((m) => m.player);
       try {
         commentator.tick(players, shots, now);
       } catch (error) {
@@ -183,6 +209,7 @@ const tick = setInterval(() => {
     }
     io.to(code).emit('snapshot', snapshot(room, now));
   }
+  limits.prune(now);
   for (const [ip, rate] of joins) if (now - rate.start > 60000) joins.delete(ip);
 }, 1000 / TICK_RATE);
 const port = Number(process.env.PORT || 3001);
