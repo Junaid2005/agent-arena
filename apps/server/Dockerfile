@@ -1,4 +1,4 @@
-FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS dependencies
+FROM node:26-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94 AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/server/package.json ./apps/server/package.json
@@ -9,7 +9,7 @@ COPY apps/server/src ./apps/server/src
 COPY packages/shared/src ./packages/shared/src
 RUN find apps/server/src -type f \( -name '*.test.ts' -o -name '*.integration.ts' \) -delete
 
-FROM node:24-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85
+FROM node:26-alpine@sha256:c6ad9e9c1d80f6eb607c26b4b0a132ff7a2344fad1c78ea3baa2a7d4c8de6d94
 # Preserve TLS roots, remove unused vulnerable utilities and package managers.
 RUN apk add --no-network ca-certificates-bundle \
     && rm -rf /usr/local/lib/node_modules /opt/yarn* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/yarn* /usr/local/bin/docker-entrypoint.sh \
